@@ -1,0 +1,18 @@
+version: '{build}'
+image: Visual Studio 2017
+configuration: Release
+before_build:
+- |- # Restore TWICE. See https://github.com/AArnott/Nerdbank.GitVersioning/issues/113#issuecomment-285903085
+  msbuild src\CSharpDiscriminatedUnion.sln /nologo /m /v:quiet /t:restore > nul
+  msbuild src\CSharpDiscriminatedUnion.sln /nologo /m /v:quiet /t:restore
+build_script:
+- msbuild src\CSharpDiscriminatedUnion.sln /nologo /m /v:minimal /t:build,pack
+artifacts:  
+  - path: bin\Packages\$(configuration)\*.nupkg
+    
+deploy:
+- provider: NuGet
+  api_key:
+    secure: 55uxvHMTDwA2bAKpOX6Wjb/t5eTUsLhsZfJukyEyCboW3c/ZnWHJaz6UeRdPRKVX
+  on:
+    branch: master
