@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\key.snk</AssemblyOriginatorKeyFile>    
+    <IsTool>true</IsTool>
+    <PackageId>CSharpDiscriminatedUnion</PackageId>
+    <Description>Creates discriminated unions in C#. Define a template for a discriminated union and the appropriate code will be generated.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="build\CSharpDiscriminatedUnion.targets">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CodeGeneration.Roslyn" Version="0.3.11-enablon" />
+    <PackageReference Include="CodeGeneration.Roslyn.Attributes" Version="0.3.11-enablon" />
+    <PackageReference Include="Microsoft.Build" Version="15.3.0-preview-000117-01" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="1.1.0">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="System.ValueTuple" Version="4.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CSharpDiscriminatedUnion.Attributes\CSharpDiscriminatedUnion.Attributes.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="bin\$(Configuration)\net46\CSharpDiscriminatedUnion.Attributes.dll">
+      <PackagePath>tools\</PackagePath>
+      <Pack>true</Pack>
+    </None>
+  </ItemGroup>
+
+</Project>
