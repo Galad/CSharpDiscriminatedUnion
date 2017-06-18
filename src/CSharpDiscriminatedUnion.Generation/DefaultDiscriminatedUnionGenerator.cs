@@ -4,12 +4,12 @@ namespace CSharpDiscriminatedUnion.Generation
 {
     internal sealed class DefaultDiscriminatedUnionGenerator : AggregateDiscriminatedUnionGenerator
     {
-        public DefaultDiscriminatedUnionGenerator()
+        public DefaultDiscriminatedUnionGenerator(string factoryPrefix)
             : base(
                   new ApplyGenericArguments(),
                   new GeneratePrivateConstructor(),
                   new CreateCasesPartialClassConstructor(),
-                  new GenerateCaseFactoryMethods(),
+                  new GenerateCaseFactoryMethods(factoryPrefix),
                   new GenerateAbstractMatchMethod(),
                   new GenerateMatchImplementation(),
                   new GenerateAbstractEquatableImplementation(),

@@ -31,6 +31,11 @@ namespace CSharpDiscriminatedUnion.Attributes
     [CodeGenerationAttribute("CSharpDiscriminatedUnion.Generation.CodeGenerator, CSharpDiscriminatedUnion.Generation, Version=" + ThisAssembly.AssemblyVersion + ", Culture=neutral, PublicKeyToken=" + ThisAssembly.PublicKeyToken)]
     [Conditional("CodeGeneration")]
     public class GenerateDiscriminatedUnionAttribute : Attribute
-    {        
+    {
+        /// <summary>
+        /// Gets or sets the prefix for the case factory methods.
+        /// The default value is <c>New</c>
+        /// </summary>
+        public string CaseFactoryPrefix { get; set; } = "New";
     }
 }

@@ -12,15 +12,24 @@ using System.Threading;
 using Validation;
 using System.Diagnostics;
 using System.Collections.Immutable;
+using CSharpDiscriminatedUnion.Attributes;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
     public class CodeGenerator : ICodeGenerator
     {
-        private static readonly IDiscriminatedUnionGenerator _defaultGenerator = new DefaultDiscriminatedUnionGenerator();
+        private readonly IDiscriminatedUnionGenerator _generator;
         public CodeGenerator(AttributeData attributeData)
         {
             Requires.NotNull(attributeData, nameof(attributeData));
+            var arguments = attributeData.NamedArguments.ToImmutableDictionary(kvp => kvp.Key, k => k.Value.Value);
+            T GetAttributeValue<T>(string name, T defaultValue, T nullValue)
+            {
+                return (T)(arguments.GetValueOrDefault(name, defaultValue) ?? nullValue);
+            }
+            _generator = new DefaultDiscriminatedUnionGenerator(
+                GetAttributeValue(nameof(GenerateDiscriminatedUnionAttribute.CaseFactoryPrefix), "New", "")
+                );
         }
 
 #if DEBUG
@@ -54,7 +63,7 @@ namespace CSharpDiscriminatedUnion.Generation
                     )
                 )
                 .ToImmutableArray();
-           
+
             var context = new DiscriminatedUnionContext(
                 applyToClass,
                 applyToClassType,
@@ -63,7 +72,7 @@ namespace CSharpDiscriminatedUnion.Generation
                 applyToClassSymbolInfo,
                 cases);
 
-            var result = _defaultGenerator.Build(context);
+            var result = _generator.Build(context);
 
             //*partialClass = AddCasesMembers(applyToClass, partialClass, cases);
 
@@ -188,7 +197,7 @@ namespace CSharpDiscriminatedUnion.Generation
             var cases = casesClass.SelectMany(
                 c => c.ChildNodes()
                       .OfType<ClassDeclarationSyntax>()
-                      .Where(n => semanticModel.GetDeclaredSymbol(n).BaseType == applyToClassSymbolInfo));        
+                      .Where(n => semanticModel.GetDeclaredSymbol(n).BaseType == applyToClassSymbolInfo));
             return cases;
         }
 

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Immutable;
+using Validation;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators
 {
@@ -16,6 +17,14 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     /// </summary>
     internal sealed class GenerateCaseFactoryMethods : IDiscriminatedUnionGenerator
     {
+        private readonly string _prefix;
+
+        public GenerateCaseFactoryMethods(string prefix)
+        {
+            Requires.NotNull(prefix, nameof(prefix));
+            _prefix = prefix;
+        }
+
         public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
         {
             return context.AddMembers(AddCasesMembers(context.Type, context.GeneratedPartialClass, context.Cases));
@@ -78,7 +87,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         {
             return MethodDeclaration(
                             type,
-                            "New" + singleCase.Name)
+                            _prefix + singleCase.Name)
                         .WithModifiers(
                             TokenList(
                                 Token(SyntaxKind.PublicKeyword),
