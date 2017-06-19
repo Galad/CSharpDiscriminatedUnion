@@ -18,11 +18,13 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     internal sealed class GenerateCaseFactoryMethods : IDiscriminatedUnionGenerator
     {
         private readonly string _prefix;
+        private readonly bool _preventNull;
 
-        public GenerateCaseFactoryMethods(string prefix)
+        public GenerateCaseFactoryMethods(string prefix, bool preventNull)
         {
             Requires.NotNull(prefix, nameof(prefix));
             _prefix = prefix;
+            _preventNull = preventNull;
         }
 
         public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
@@ -105,26 +107,44 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                         )
                         .WithBody(
                             Block(
-                                ReturnStatement(
-                                    ObjectCreationExpression(
-                                        QualifiedName(
-                                            IdentifierName("Cases"),
-                                            IdentifierName(singleCase.Name)
-                                        )
-                                    )
-                                    .WithArgumentList(
-                                        ArgumentList(
-                                            SeparatedList(
-                                                singleCase.CaseValues.Select(p => Argument(IdentifierName(p.Name)))
-                                            )
-                                        )
-                                    )
-                                )
+                                GenerateCreateCaseFactoryBlock(singleCase)
                             )
                         )
                         ;
         }
 
+        private IEnumerable<StatementSyntax> GenerateCreateCaseFactoryBlock(DiscriminatedUnionCase singleCase)
+        {
+            if (_preventNull)
+            {
+                foreach (var caseValue in singleCase.CaseValues.Where(c => CanHaveNullGuard(c)))
+                {
+                    var c = caseValue;
+                    yield return GeneratorHelpers.CreateGuardForNull(IdentifierName(c.Name));
+                }
+            }
+            yield return ReturnStatement(
+                    ObjectCreationExpression(
+                        QualifiedName(
+                            IdentifierName("Cases"),
+                            IdentifierName(singleCase.Name)
+                        )
+                    )
+                    .WithArgumentList(
+                        ArgumentList(
+                            SeparatedList(
+                                singleCase.CaseValues.Select(p => Argument(IdentifierName(p.Name)))
+                            )
+                        )
+                    )
+                );
+        }
 
+        private static bool CanHaveNullGuard(CaseValue c)
+        {
+            return c.SymbolInfo.IsReferenceType ||
+                   c.SymbolInfo.TypeKind == TypeKind.TypeParameter && 
+                   !c.SymbolInfo.IsValueType;
+        }
     }
 }

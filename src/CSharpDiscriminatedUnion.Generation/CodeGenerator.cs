@@ -28,7 +28,8 @@ namespace CSharpDiscriminatedUnion.Generation
                 return (T)(arguments.GetValueOrDefault(name, defaultValue) ?? nullValue);
             }
             _generator = new DefaultDiscriminatedUnionGenerator(
-                GetAttributeValue(nameof(GenerateDiscriminatedUnionAttribute.CaseFactoryPrefix), "New", "")
+                GetAttributeValue(nameof(GenerateDiscriminatedUnionAttribute.CaseFactoryPrefix), "New", ""),
+                GetAttributeValue(nameof(GenerateDiscriminatedUnionAttribute.PreventNullValues), false, false)
                 );
         }
 

@@ -28,6 +28,9 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
     [TestFixture(typeof(Either<int, int>))]
     [TestFixture(typeof(Either<int, double>))]
     [TestFixture(typeof(Either<int, string>))]
+    [TestFixture(typeof(PreventNull1))]
+    [TestFixture(typeof(PreventNull2))]
+    [TestFixture(typeof(PreventNull3<string>))]
     public class CommonPropertiesTests<T>
     {        
         private static IEnumerable<TestCaseData> TestSource

@@ -37,5 +37,10 @@ namespace CSharpDiscriminatedUnion.Attributes
         /// The default value is <c>New</c>
         /// </summary>
         public string CaseFactoryPrefix { get; set; } = "New";
+        /// <summary>
+        /// Throws a <see cref="ArgumentNullException"/> when trying to create a case with null values. 
+        /// Example: Maybe&lt;string&gt;.NewSome(null) will throw an exception
+        /// </summary>
+        public bool PreventNullValues { get; set; }
     }
 }
