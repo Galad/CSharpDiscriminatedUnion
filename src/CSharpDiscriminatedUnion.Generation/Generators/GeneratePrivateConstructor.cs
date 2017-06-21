@@ -12,9 +12,9 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     /// <summary>
     /// Generates a private constructor so that the class cannot be inherited by consumers
     /// </summary>
-    internal sealed class GeneratePrivateConstructor : IDiscriminatedUnionGenerator
+    internal sealed class GeneratePrivateConstructor<T> : IDiscriminatedUnionGenerator<T> where T : IDiscriminatedUnionCase
     {
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)
         {
             var constructor = ConstructorDeclaration(context.UserDefinedClass.Identifier)
                         .AddModifiers(Token(SyntaxKind.PrivateKeyword))

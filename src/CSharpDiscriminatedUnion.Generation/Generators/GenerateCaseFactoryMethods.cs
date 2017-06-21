@@ -9,52 +9,58 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Immutable;
 using Validation;
+using CSharpDiscriminatedUnion.Generation;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators
 {
     /// <summary>
     /// Build the factory methods for each case
     /// </summary>
-    internal sealed class GenerateCaseFactoryMethods : IDiscriminatedUnionGenerator
+    internal class GenerateCaseFactoryMethods<T> : IDiscriminatedUnionGenerator<T> where T : IDiscriminatedUnionCase
     {
         private readonly string _prefix;
         private readonly bool _preventNull;
+        private readonly Func<DiscriminatedUnionContext<T>, T, ExpressionSyntax> _singletonInitializer;
+        private readonly Func<DiscriminatedUnionContext<T>, T, ExpressionSyntax> _generateFactoryMethodReturnStatement;        
 
-        public GenerateCaseFactoryMethods(string prefix, bool preventNull)
+        public GenerateCaseFactoryMethods(
+            string prefix,
+            bool preventNull,
+            Func<DiscriminatedUnionContext<T>, T, ExpressionSyntax> singletonInitializer,
+            Func<DiscriminatedUnionContext<T>, T, ExpressionSyntax> generateFactoryMethodReturnStatement)
         {
             Requires.NotNull(prefix, nameof(prefix));
             _prefix = prefix;
             _preventNull = preventNull;
+            _singletonInitializer = singletonInitializer;
+            _generateFactoryMethodReturnStatement = generateFactoryMethodReturnStatement;
+        }
+        
+        public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)
+        {
+            return context.AddMembers(AddCasesMembers(context));
         }
 
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        private IEnumerable<MemberDeclarationSyntax> AddCasesMembers(DiscriminatedUnionContext<T> context)
         {
-            return context.AddMembers(AddCasesMembers(context.Type, context.GeneratedPartialClass, context.Cases));
-        }
-
-        private IEnumerable<MemberDeclarationSyntax> AddCasesMembers(
-            TypeSyntax type,
-            ClassDeclarationSyntax partialClass,
-            ImmutableArray<DiscriminatedUnionCase> cases)
-        {
-            return cases.Select(c =>
+            return context.Cases.Select(c =>
             {
                 MemberDeclarationSyntax member;
                 if (c.CaseValues.Length == 0)
                 {
-                    member = CreateSingleCaseSingleton(type, c);
+                    member = CreateSingleCaseSingleton(context, c);
                 }
                 else
                 {
-                    member = CreateCaseFactoryMethod(type, c);
+                    member = CreateCaseFactoryMethod(context, c);
                 }
                 return member;
             });
         }
 
-        private static MemberDeclarationSyntax CreateSingleCaseSingleton(
-            TypeSyntax type,
-            DiscriminatedUnionCase singleCase)
+        private MemberDeclarationSyntax CreateSingleCaseSingleton(
+            DiscriminatedUnionContext<T> context,
+            T singleCase)
         {
             return FieldDeclaration(
                         List<AttributeListSyntax>(),
@@ -64,18 +70,12 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                             Token(SyntaxKind.ReadOnlyKeyword)
                         ),
                         VariableDeclaration(
-                            type,
+                            context.Type,
                             SeparatedList(new[] {
                                 VariableDeclarator(singleCase.Name)
                                 .WithInitializer(
                                     EqualsValueClause(
-                                        ObjectCreationExpression(
-                                            QualifiedName(
-                                                IdentifierName("Cases"),
-                                                IdentifierName(singleCase.Name)
-                                            )
-                                        )
-                                        .WithArgumentList(ArgumentList())
+                                        _singletonInitializer(context, singleCase)
                                     )
                                 )
                             })
@@ -84,11 +84,11 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         }
 
         private MemberDeclarationSyntax CreateCaseFactoryMethod(
-            TypeSyntax type,
-            DiscriminatedUnionCase singleCase)
+            DiscriminatedUnionContext<T> context,
+            T singleCase)
         {
             return MethodDeclaration(
-                            type,
+                            context.Type,
                             _prefix + singleCase.Name)
                         .WithModifiers(
                             TokenList(
@@ -107,13 +107,15 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                         )
                         .WithBody(
                             Block(
-                                GenerateCreateCaseFactoryBlock(singleCase)
+                                GenerateCreateCaseFactoryBlock(context, singleCase)
                             )
                         )
                         ;
         }
 
-        private IEnumerable<StatementSyntax> GenerateCreateCaseFactoryBlock(DiscriminatedUnionCase singleCase)
+        private IEnumerable<StatementSyntax> GenerateCreateCaseFactoryBlock(
+            DiscriminatedUnionContext<T> context, 
+            T singleCase)
         {
             if (_preventNull)
             {
@@ -123,27 +125,13 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                     yield return GeneratorHelpers.CreateGuardForNull(IdentifierName(c.Name));
                 }
             }
-            yield return ReturnStatement(
-                    ObjectCreationExpression(
-                        QualifiedName(
-                            IdentifierName("Cases"),
-                            IdentifierName(singleCase.Name)
-                        )
-                    )
-                    .WithArgumentList(
-                        ArgumentList(
-                            SeparatedList(
-                                singleCase.CaseValues.Select(p => Argument(IdentifierName(p.Name)))
-                            )
-                        )
-                    )
-                );
+            yield return ReturnStatement(_generateFactoryMethodReturnStatement(context, singleCase));
         }
 
         private static bool CanHaveNullGuard(CaseValue c)
         {
             return c.SymbolInfo.IsReferenceType ||
-                   c.SymbolInfo.TypeKind == TypeKind.TypeParameter && 
+                   c.SymbolInfo.TypeKind == TypeKind.TypeParameter &&
                    !c.SymbolInfo.IsValueType;
         }
     }

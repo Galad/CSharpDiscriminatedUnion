@@ -12,9 +12,9 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     /// <summary>
     /// Creates the constructor for the partial classes
     /// </summary>
-    internal sealed class CreateCasesPartialClassConstructor : IDiscriminatedUnionGenerator
+    internal sealed class CreateCasesPartialClassConstructor : IDiscriminatedUnionGenerator<ClassDiscriminatedUnionCase>
     {
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<ClassDiscriminatedUnionCase> Build(DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context)
         {            
             var cases = context.Cases
                                .Select(c => c.AddMember(CreateCasePartialClassConstructor(c)))
@@ -22,7 +22,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             return context.WithCases(cases);
         }
 
-        private MemberDeclarationSyntax CreateCasePartialClassConstructor(DiscriminatedUnionCase unionCase)
+        private MemberDeclarationSyntax CreateCasePartialClassConstructor(ClassDiscriminatedUnionCase unionCase)
         {
             var constructor =
                  SyntaxFactory.ConstructorDeclaration(unionCase.UserDefinedClass.Identifier)

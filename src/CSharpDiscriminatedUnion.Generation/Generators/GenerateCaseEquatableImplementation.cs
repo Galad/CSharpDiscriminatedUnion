@@ -14,25 +14,25 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     /// <summary>
     /// Generates the implementation of <see cref="IEquatable{T}.Equals(T)"/> in the case classes
     /// </summary>
-    internal sealed class GenerateCaseEquatableImplementation : IDiscriminatedUnionGenerator
+    internal sealed class GenerateCaseEquatableImplementation : IDiscriminatedUnionGenerator<ClassDiscriminatedUnionCase>
     {
         private const string ParameterName = "obj";
 
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<ClassDiscriminatedUnionCase> Build(DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context)
         {
             return context.WithCases(
                 context.Cases.Select(c => c.AddMember(GenerateEqualsImplementation(context.Type, c, context.Cases))).ToImmutableArray()
                 );
         }
 
-        private MethodDeclarationSyntax GenerateEqualsImplementation(TypeSyntax name, DiscriminatedUnionCase @case, ImmutableArray<DiscriminatedUnionCase> allCases)
+        private MethodDeclarationSyntax GenerateEqualsImplementation(TypeSyntax name, ClassDiscriminatedUnionCase @case, ImmutableArray<ClassDiscriminatedUnionCase> allCases)
         {
             return GeneratorHelpers.GenerateEquatableImplementation(name, ParameterName)
                                                      .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.OverrideKeyword)))
                                                      .WithBody(Block(GenerateEqualsBlock(@case, allCases)));
         }
 
-        private IEnumerable<StatementSyntax> GenerateEqualsBlock(DiscriminatedUnionCase @case, ImmutableArray<DiscriminatedUnionCase> allCases)
+        private IEnumerable<StatementSyntax> GenerateEqualsBlock(ClassDiscriminatedUnionCase @case, ImmutableArray<ClassDiscriminatedUnionCase> allCases)
         {
             yield return IfValueIsNullThenReturnFalse();
             yield return IfValueIsThisThenReturnTrue();
@@ -55,7 +55,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                 );
         }
 
-        private StatementSyntax ReturnByMatching(DiscriminatedUnionCase @case, ImmutableArray<DiscriminatedUnionCase> allCases)
+        private StatementSyntax ReturnByMatching(ClassDiscriminatedUnionCase @case, ImmutableArray<ClassDiscriminatedUnionCase> allCases)
         {
             return ReturnStatement(
                 InvocationExpression(
@@ -75,13 +75,13 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             );
         }
 
-        private ArgumentSyntax LambdaReturnsFalse(DiscriminatedUnionCase @case)
+        private ArgumentSyntax LambdaReturnsFalse(ClassDiscriminatedUnionCase @case)
         {
             var lambdaBody = GeneratorHelpers.FalseExpression();
             return LambdaForCase(@case, lambdaBody);
         }
 
-        private ArgumentSyntax LambdaForCase(DiscriminatedUnionCase @case, ExpressionSyntax lambdaBody)
+        private ArgumentSyntax LambdaForCase(ClassDiscriminatedUnionCase @case, ExpressionSyntax lambdaBody)
         {
             if (@case.CaseValues.Length == 1)
             {
@@ -99,7 +99,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             );
         }
 
-        private ArgumentSyntax LambdaReturnsEquality(DiscriminatedUnionCase @case)
+        private ArgumentSyntax LambdaReturnsEquality(ClassDiscriminatedUnionCase @case)
         {
             if (@case.CaseValues.Length == 0)
             {

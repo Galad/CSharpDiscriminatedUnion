@@ -5,26 +5,80 @@ using Validation;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
-    internal struct DiscriminatedUnionCase
+    internal interface IDiscriminatedUnionCase
+    {
+        ImmutableArray<CaseValue> CaseValues { get; }
+        int CaseNumber { get; }
+        SyntaxToken Name { get; }
+    }
+
+    internal struct StructDiscriminatedUnionCase : IDiscriminatedUnionCase
     {
         private class ReadonlyContext
         {
-            public ClassDeclarationSyntax UserDefinedClass;
+            public SyntaxToken Name;   
+            public ImmutableArray<CaseValue> CaseValues;
+            public int CaseNumber;
+        }
+        
+        public ImmutableArray<CaseValue> CaseValues => _readonlyContext.CaseValues;
+        public int CaseNumber => _readonlyContext.CaseNumber;
+        public SyntaxToken Name => _readonlyContext.Name;
+        public ImmutableArray<MemberDeclarationSyntax> Members { get; }
+        private readonly ReadonlyContext _readonlyContext;
+
+        public StructDiscriminatedUnionCase(
+            SyntaxToken name,
+            ImmutableArray<CaseValue> caseValues,
+            int caseNumber)
+        {
+            Requires.That(!caseValues.IsDefault, nameof(caseValues), "Cases cannot be a default value");
+            _readonlyContext = new ReadonlyContext()
+            {                
+                CaseValues = caseValues,
+                CaseNumber = caseNumber,
+                Name = name
+            };
+            Members = ImmutableArray<MemberDeclarationSyntax>.Empty;
+        }
+
+        private StructDiscriminatedUnionCase(
+            ReadonlyContext readonlyContext,
+            ImmutableArray<MemberDeclarationSyntax> members) : this()
+        {
+            _readonlyContext = readonlyContext;
+            Members = members;
+        }
+
+        public StructDiscriminatedUnionCase AddMember(MemberDeclarationSyntax member)
+        {
+            Requires.NotNull(member, nameof(member));
+            return new StructDiscriminatedUnionCase(
+                _readonlyContext,
+                Members.Add(member));
+        }
+    }
+
+    internal struct ClassDiscriminatedUnionCase : IDiscriminatedUnionCase
+    {
+        private class ReadonlyContext
+        {
+            public TypeDeclarationSyntax UserDefinedClass;
             public ClassDeclarationSyntax GeneratedPartialClass;
             public ImmutableArray<CaseValue> CaseValues;
             public int CaseNumber;
         }
 
-        public ClassDeclarationSyntax UserDefinedClass => _readonlyContext.UserDefinedClass;
+        public TypeDeclarationSyntax UserDefinedClass => _readonlyContext.UserDefinedClass;
         public ClassDeclarationSyntax GeneratedPartialClass => _readonlyContext.GeneratedPartialClass;
         public ImmutableArray<CaseValue> CaseValues => _readonlyContext.CaseValues;
         public int CaseNumber => _readonlyContext.CaseNumber;
         public SyntaxToken Name => _readonlyContext.UserDefinedClass.Identifier;
         public ImmutableArray<MemberDeclarationSyntax> Members { get; }
         private readonly ReadonlyContext _readonlyContext;
-        
-        public DiscriminatedUnionCase(
-            ClassDeclarationSyntax userDefinedClass,
+
+        public ClassDiscriminatedUnionCase(
+            TypeDeclarationSyntax userDefinedClass,
             ClassDeclarationSyntax generatedPartialClass,
             ImmutableArray<CaseValue> caseValues,
             int caseNumber)
@@ -40,7 +94,7 @@ namespace CSharpDiscriminatedUnion.Generation
             Members = ImmutableArray<MemberDeclarationSyntax>.Empty;
         }
 
-        private DiscriminatedUnionCase(
+        private ClassDiscriminatedUnionCase(
             ReadonlyContext readonlyContext,
             ImmutableArray<MemberDeclarationSyntax> members) : this()
         {
@@ -49,10 +103,10 @@ namespace CSharpDiscriminatedUnion.Generation
 
         }
 
-        public DiscriminatedUnionCase AddMember(MemberDeclarationSyntax member)
+        public ClassDiscriminatedUnionCase AddMember(MemberDeclarationSyntax member)
         {
             Requires.NotNull(member, nameof(member));
-            return new DiscriminatedUnionCase(
+            return new ClassDiscriminatedUnionCase(
                 _readonlyContext,
                 Members.Add(member));
         }

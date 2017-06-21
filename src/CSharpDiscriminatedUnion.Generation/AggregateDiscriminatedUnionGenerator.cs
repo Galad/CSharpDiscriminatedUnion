@@ -3,17 +3,17 @@ using Validation;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
-    internal class AggregateDiscriminatedUnionGenerator : IDiscriminatedUnionGenerator
+    internal class AggregateDiscriminatedUnionGenerator<T> : IDiscriminatedUnionGenerator<T> where T : IDiscriminatedUnionCase
     {
-        private readonly IDiscriminatedUnionGenerator[] _innerGenerators;
+        private readonly IDiscriminatedUnionGenerator<T>[] _innerGenerators;
 
-        public AggregateDiscriminatedUnionGenerator(params IDiscriminatedUnionGenerator[] innerGenerators)
+        public AggregateDiscriminatedUnionGenerator(params IDiscriminatedUnionGenerator<T>[] innerGenerators)
         {
             Requires.NotNull(innerGenerators, nameof(innerGenerators));
             _innerGenerators = innerGenerators;
         }
 
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)
         {
             return _innerGenerators.Aggregate(context, (c, g) => g.Build(c));
         }

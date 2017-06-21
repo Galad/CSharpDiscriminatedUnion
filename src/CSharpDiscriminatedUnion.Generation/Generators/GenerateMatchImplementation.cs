@@ -13,9 +13,9 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     /// <summary>
     /// Generate the Match implementation for the case classes
     /// </summary>
-    internal class GenerateMatchImplementation : IDiscriminatedUnionGenerator
+    internal class GenerateMatchImplementation : IDiscriminatedUnionGenerator<ClassDiscriminatedUnionCase>
     {
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<ClassDiscriminatedUnionCase> Build(DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context)
         {
             if (context.Cases.IsEmpty)
             {
@@ -27,8 +27,8 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         }
 
         private static MemberDeclarationSyntax GetMatchImplementation(
-            DiscriminatedUnionContext context,
-            DiscriminatedUnionCase currentCase)
+            DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context,
+            ClassDiscriminatedUnionCase currentCase)
         {
             var match = GeneratorHelpers.CreateMatchMethod(context.Cases, context.MatchGenericParameter)
                              .WithModifiers(
@@ -42,8 +42,8 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         }
 
         private static BlockSyntax GetMatchBlock(
-            ImmutableArray<DiscriminatedUnionCase> cases,
-            DiscriminatedUnionCase currentCase)
+            ImmutableArray<ClassDiscriminatedUnionCase> cases,
+            ClassDiscriminatedUnionCase currentCase)
         {
             StatementSyntax getReturnStatement()
             {

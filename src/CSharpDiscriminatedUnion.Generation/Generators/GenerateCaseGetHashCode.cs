@@ -10,19 +10,19 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators
 {
-    internal sealed class GenerateCaseGetHashCode : IDiscriminatedUnionGenerator
+    internal sealed class GenerateCaseGetHashCode : IDiscriminatedUnionGenerator<ClassDiscriminatedUnionCase>
     {
         private const int PrimeNumber = 16777619;
         private const string PrimeConstant = "prime";
         private const string HashCodeVariable = "hash";
         private static readonly IdentifierNameSyntax HashCodeVariableIdentifier = IdentifierName(HashCodeVariable);
 
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<ClassDiscriminatedUnionCase> Build(DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context)
         {
             return context.WithCases(context.Cases.Select(c => c.AddMember(GenerateGetHashCode(c))).ToImmutableArray());
         }
 
-        private MemberDeclarationSyntax GenerateGetHashCode(DiscriminatedUnionCase c)
+        private MemberDeclarationSyntax GenerateGetHashCode(ClassDiscriminatedUnionCase c)
         {
             return MethodDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)), "GetHashCode")
                 .WithModifiers(
@@ -43,7 +43,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                 );
         }
 
-        private IEnumerable<StatementSyntax> GenerateGetHashCodeBody(DiscriminatedUnionCase @case)
+        private IEnumerable<StatementSyntax> GenerateGetHashCodeBody(ClassDiscriminatedUnionCase @case)
         {
             if (@case.CaseValues.Length == 0)
             {
@@ -65,17 +65,6 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             }
 
             yield return ReturnStatement(HashCodeVariableIdentifier);
-
-            //yield return ReturnStatement(
-            //    @case.CaseValues.Skip(1).Aggregate(
-            //        HashCodeForCaseValue(@case.CaseValues[0]),
-            //        (exp, c) =>
-            //        BinaryExpression(
-            //            SyntaxKind.ExclusiveOrExpression,
-            //            exp,
-            //            HashCodeForCaseValue(c))
-            //        )
-            //    );
         }
 
         private static StatementSyntax GenerateHashCodeForFieldValue(ExpressionSyntax hashCode)

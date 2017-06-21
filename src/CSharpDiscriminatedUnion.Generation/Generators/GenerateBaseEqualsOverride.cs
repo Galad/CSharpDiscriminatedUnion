@@ -12,14 +12,14 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     /// <summary>
     /// Generates the override of <see cref="Object.Equals(object)"/>
     /// </summary>
-    internal sealed class GenerateBaseEqualsOverride : IDiscriminatedUnionGenerator
+    internal sealed class GenerateBaseEqualsOverride<T> : IDiscriminatedUnionGenerator<T> where T : IDiscriminatedUnionCase
     {
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)
         {
             return context.AddMember(GenerateEqualsOverride(context));
         }
 
-        private static MemberDeclarationSyntax GenerateEqualsOverride(DiscriminatedUnionContext context)
+        private static MemberDeclarationSyntax GenerateEqualsOverride(DiscriminatedUnionContext<T> context)
         {
             return MethodDeclaration(
                 PredefinedType(Token(SyntaxKind.BoolKeyword)),
@@ -46,7 +46,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             .WithBody(Block(GenerateEqualsStatements(context)));
         }
 
-        private static StatementSyntax GenerateEqualsStatements(DiscriminatedUnionContext context)
+        private static StatementSyntax GenerateEqualsStatements(DiscriminatedUnionContext<T> context)
         {
             return ReturnStatement(
                     InvocationExpression(

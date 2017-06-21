@@ -13,7 +13,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
 {
     internal static class GeneratorHelpers
     {
-        public static MethodDeclarationSyntax CreateMatchMethod(ImmutableArray<DiscriminatedUnionCase> cases, SyntaxToken generateParameterName)
+        public static MethodDeclarationSyntax CreateMatchMethod(ImmutableArray<ClassDiscriminatedUnionCase> cases, SyntaxToken generateParameterName)
         {
             var match =
                 MethodDeclaration(IdentifierName(generateParameterName), "Match")
@@ -22,7 +22,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             return match;
         }
 
-        private static ParameterSyntax GetCaseMatchFunction(DiscriminatedUnionCase @case, SyntaxToken generateParameterName)
+        private static ParameterSyntax GetCaseMatchFunction(ClassDiscriminatedUnionCase @case, SyntaxToken generateParameterName)
         {
             return Parameter(
                     Identifier("match" + @case.Name.Text)
@@ -151,7 +151,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         private static readonly ImmutableArray<string> _matchGenericParametersCandidates = ImmutableArray.Create("T", "TResult", "TMatch", "TMatchResult");
         private const string GeneratedMatchGenericParameter = "TResult";
 
-        public static SyntaxToken GenerateMatchResultGenericParameterName(ClassDeclarationSyntax @class, bool isGeneric)
+        public static SyntaxToken GenerateMatchResultGenericParameterName(TypeDeclarationSyntax @class, bool isGeneric)
         {
             if (!isGeneric)
             {

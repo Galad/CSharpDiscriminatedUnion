@@ -12,9 +12,9 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     /// <summary>
     /// Generate the operator override ==
     /// </summary>
-    internal sealed class GenerateBaseEqualsOperatorOverload : IDiscriminatedUnionGenerator
+    internal sealed class GenerateBaseEqualsOperatorOverload<T> : IDiscriminatedUnionGenerator<T> where T : IDiscriminatedUnionCase
     {
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)
         {
             return context.AddMembers(
                 new[]
@@ -24,13 +24,13 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                 });
         }
 
-        private static MemberDeclarationSyntax GenerateEqualsOperatorOverload(DiscriminatedUnionContext context)
+        private static MemberDeclarationSyntax GenerateEqualsOperatorOverload(DiscriminatedUnionContext<T> context)
         {
-            return DeclareOperator(context, SyntaxKind.EqualsEqualsToken, GenerateEqualsStatements(context));
+            return DeclareOperator(context, SyntaxKind.EqualsEqualsToken, GenerateEqualsStatements());
         }
 
         private static MemberDeclarationSyntax DeclareOperator(
-            DiscriminatedUnionContext context,
+            DiscriminatedUnionContext<T> context,
             SyntaxKind operatorSyntaxKind,
             IEnumerable<StatementSyntax> body)
         {
@@ -58,7 +58,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                         .WithBody(Block(body));
         }
 
-        private static IEnumerable<StatementSyntax> GenerateEqualsStatements(DiscriminatedUnionContext context)
+        private static IEnumerable<StatementSyntax> GenerateEqualsStatements()
         {
             yield return IfStatement(
                     GeneratorHelpers.InvokeReferenceEquals(IdentifierName("left"), GeneratorHelpers.NullExpression()),
@@ -80,7 +80,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                 );
         }
 
-        private static MemberDeclarationSyntax GenerateNotEqualsOperatorOverload(DiscriminatedUnionContext context)
+        private static MemberDeclarationSyntax GenerateNotEqualsOperatorOverload(DiscriminatedUnionContext<T> context)
         {
             return DeclareOperator(context, SyntaxKind.ExclamationEqualsToken, new[] { GenerateNotEqualsStatements() });
         }

@@ -13,9 +13,9 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     /// <summary>
     /// Generates the abstract Match method
     /// </summary>
-    internal class GenerateAbstractMatchMethod : IDiscriminatedUnionGenerator
-    {
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+    internal class GenerateAbstractMatchMethod : IDiscriminatedUnionGenerator<ClassDiscriminatedUnionCase>
+    { 
+        public DiscriminatedUnionContext<ClassDiscriminatedUnionCase> Build(DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context)
         {
             if (context.Cases.IsEmpty)
             {
@@ -24,7 +24,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             return context.AddMember(GetAbstractMatchMethod(context));
         }
 
-        private static MemberDeclarationSyntax GetAbstractMatchMethod(DiscriminatedUnionContext context)
+        private static MemberDeclarationSyntax GetAbstractMatchMethod(DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context)
         {
             var match =GeneratorHelpers.CreateMatchMethod(context.Cases, context.MatchGenericParameter)
                              .WithModifiers(
