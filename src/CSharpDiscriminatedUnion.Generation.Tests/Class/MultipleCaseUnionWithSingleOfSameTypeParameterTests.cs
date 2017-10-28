@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace CSharpDiscriminatedUnion.Generation.Tests
+namespace CSharpDiscriminatedUnion.Generation.Tests.Class
 {
     public class MultipleCaseUnionWithSingleOfSameTypeParameterTests
     {

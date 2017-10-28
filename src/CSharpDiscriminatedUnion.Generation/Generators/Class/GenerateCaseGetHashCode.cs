@@ -8,21 +8,21 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace CSharpDiscriminatedUnion.Generation.Generators
+namespace CSharpDiscriminatedUnion.Generation.Generators.Class
 {
-    internal sealed class GenerateCaseGetHashCode : IDiscriminatedUnionGenerator<ClassDiscriminatedUnionCase>
+    internal sealed class GenerateCaseGetHashCode : IDiscriminatedUnionGenerator<DiscriminatedUnionCase>
     {
         private const int PrimeNumber = 16777619;
         private const string PrimeConstant = "prime";
         private const string HashCodeVariable = "hash";
         private static readonly IdentifierNameSyntax HashCodeVariableIdentifier = IdentifierName(HashCodeVariable);
 
-        public DiscriminatedUnionContext<ClassDiscriminatedUnionCase> Build(DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context)
+        public DiscriminatedUnionContext<DiscriminatedUnionCase> Build(DiscriminatedUnionContext<DiscriminatedUnionCase> context)
         {
             return context.WithCases(context.Cases.Select(c => c.AddMember(GenerateGetHashCode(c))).ToImmutableArray());
         }
 
-        private MemberDeclarationSyntax GenerateGetHashCode(ClassDiscriminatedUnionCase c)
+        private MemberDeclarationSyntax GenerateGetHashCode(DiscriminatedUnionCase c)
         {
             return MethodDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)), "GetHashCode")
                 .WithModifiers(
@@ -43,7 +43,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                 );
         }
 
-        private IEnumerable<StatementSyntax> GenerateGetHashCodeBody(ClassDiscriminatedUnionCase @case)
+        private IEnumerable<StatementSyntax> GenerateGetHashCodeBody(DiscriminatedUnionCase @case)
         {
             if (@case.CaseValues.Length == 0)
             {

@@ -13,7 +13,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
 {
     internal static class GeneratorHelpers
     {
-        public static MethodDeclarationSyntax CreateMatchMethod(ImmutableArray<ClassDiscriminatedUnionCase> cases, SyntaxToken generateParameterName)
+        public static MethodDeclarationSyntax CreateMatchMethod(ImmutableArray<DiscriminatedUnionCase> cases, SyntaxToken generateParameterName)
         {
             var match =
                 MethodDeclaration(IdentifierName(generateParameterName), "Match")
@@ -22,7 +22,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             return match;
         }
 
-        private static ParameterSyntax GetCaseMatchFunction(ClassDiscriminatedUnionCase @case, SyntaxToken generateParameterName)
+        private static ParameterSyntax GetCaseMatchFunction(DiscriminatedUnionCase @case, SyntaxToken generateParameterName)
         {
             return Parameter(
                     Identifier("match" + @case.Name.Text)

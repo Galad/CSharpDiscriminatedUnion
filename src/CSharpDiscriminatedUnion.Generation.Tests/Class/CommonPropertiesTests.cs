@@ -6,7 +6,7 @@ using CSharpDiscriminatedUnion.Generation.Tests.UnionTypes;
 using System;
 using System.CodeDom.Compiler;
 
-namespace CSharpDiscriminatedUnion.Generation.Tests
+namespace CSharpDiscriminatedUnion.Generation.Tests.Class
 {
     [TestFixture(typeof(NoCaseUnion))]
     [TestFixture(typeof(NoCaseUnionGeneric<object>))]

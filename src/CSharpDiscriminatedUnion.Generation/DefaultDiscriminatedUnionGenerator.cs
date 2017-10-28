@@ -1,44 +1,29 @@
 ﻿using CSharpDiscriminatedUnion.Generation.Generators;
-using CSharpDiscriminatedUnion.Generation.Generators.Struct;
+using CSharpDiscriminatedUnion.Generation.Generators.Class;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
-    internal sealed class ClassDiscriminatedUnionGenerator : AggregateDiscriminatedUnionGenerator<ClassDiscriminatedUnionCase>
+    internal sealed class ClassDiscriminatedUnionGenerator : AggregateDiscriminatedUnionGenerator<DiscriminatedUnionCase>
     {
         public ClassDiscriminatedUnionGenerator(
             string factoryPrefix,
             bool preventNull)
             : base(
-                  new ApplyGenericArguments<ClassDiscriminatedUnionCase>(),
-                  new GeneratePrivateConstructor<ClassDiscriminatedUnionCase>(),
+                  new ApplyGenericArguments<DiscriminatedUnionCase>(),
+                  new GeneratePrivateConstructor<DiscriminatedUnionCase>(),
                   new CreateCasesPartialClassConstructor(),
                   new GenerateClassCasesFactoryMethods(factoryPrefix, preventNull),
                   new GenerateAbstractMatchMethod(),
                   new GenerateMatchImplementation(),
-                  new GenerateAbstractEquatableImplementation<ClassDiscriminatedUnionCase>(),
+                  new GenerateAbstractEquatableImplementation<DiscriminatedUnionCase>(),
                   new GenerateCaseEquatableImplementation(),
-                  new GenerateBaseEqualsOverride<ClassDiscriminatedUnionCase>(),
-                  new GenerateBaseEqualsOperatorOverload<ClassDiscriminatedUnionCase>(),
+                  new GenerateBaseEqualsOverride<DiscriminatedUnionCase>(),
+                  new GenerateBaseEqualsOperatorOverload<DiscriminatedUnionCase>(),
                   new GenerateCaseGetHashCode(),
-                  new AddGeneratedCodeAttribute<ClassDiscriminatedUnionCase>("DiscriminitedUnion", "1.0"),
-                  new GenerateBaseGetHashCodeImplementation<ClassDiscriminatedUnionCase>()
+                  new AddGeneratedCodeAttribute<DiscriminatedUnionCase>("DiscriminitedUnion", "1.0"),
+                  new GenerateBaseGetHashCodeImplementation<DiscriminatedUnionCase>()
                   )
         {
-        }
-    }
-
-    internal sealed class StructDiscriminatedUnionGenerator : AggregateDiscriminatedUnionGenerator<StructDiscriminatedUnionCase>
-    {
-        public StructDiscriminatedUnionGenerator(
-            string factoryPrefix,
-            bool preventNull)
-            : base(
-                  new GenerateStructCases(),
-                  new GenerateTagField<StructDiscriminatedUnionCase>(),
-                  new GenerateStructConstructor(),
-                  new GenerateStructCasesFactoryMethods(factoryPrefix, preventNull)
-                  )
-        {            
         }
     }
 }

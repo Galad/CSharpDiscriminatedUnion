@@ -2,9 +2,9 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Linq;
 
-namespace CSharpDiscriminatedUnion.Generation.Generators
+namespace CSharpDiscriminatedUnion.Generation.Generators.Class
 {
-    internal sealed class GenerateClassCasesFactoryMethods : GenerateCaseFactoryMethods<ClassDiscriminatedUnionCase>
+    internal sealed class GenerateClassCasesFactoryMethods : GenerateCaseFactoryMethods<DiscriminatedUnionCase>
     {
         public GenerateClassCasesFactoryMethods(string prefix, bool preventNull)
             : base(prefix, preventNull, GenerateSingletonInitializer, GenerateFactoryMethodReturnStatement)
@@ -12,8 +12,8 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         }
 
         private static ExpressionSyntax GenerateFactoryMethodReturnStatement(
-            DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context, 
-            ClassDiscriminatedUnionCase @case)
+            DiscriminatedUnionContext<DiscriminatedUnionCase> context, 
+            DiscriminatedUnionCase @case)
         {
             return ObjectCreationExpression(
                         QualifiedName(
@@ -31,8 +31,8 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         }
 
         private static ExpressionSyntax GenerateSingletonInitializer(
-            DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context,
-            ClassDiscriminatedUnionCase @case)
+            DiscriminatedUnionContext<DiscriminatedUnionCase> context,
+            DiscriminatedUnionCase @case)
         {
             return ObjectCreationExpression(
                         QualifiedName(

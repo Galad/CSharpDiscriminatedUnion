@@ -7,14 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CSharpDiscriminatedUnion.Generation.Generators
+namespace CSharpDiscriminatedUnion.Generation.Generators.Class
 {
     /// <summary>
     /// Creates the constructor for the partial classes
     /// </summary>
-    internal sealed class CreateCasesPartialClassConstructor : IDiscriminatedUnionGenerator<ClassDiscriminatedUnionCase>
+    internal sealed class CreateCasesPartialClassConstructor : IDiscriminatedUnionGenerator<DiscriminatedUnionCase>
     {
-        public DiscriminatedUnionContext<ClassDiscriminatedUnionCase> Build(DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context)
+        public DiscriminatedUnionContext<DiscriminatedUnionCase> Build(DiscriminatedUnionContext<DiscriminatedUnionCase> context)
         {            
             var cases = context.Cases
                                .Select(c => c.AddMember(CreateCasePartialClassConstructor(c)))
@@ -22,7 +22,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             return context.WithCases(cases);
         }
 
-        private MemberDeclarationSyntax CreateCasePartialClassConstructor(ClassDiscriminatedUnionCase unionCase)
+        private MemberDeclarationSyntax CreateCasePartialClassConstructor(DiscriminatedUnionCase unionCase)
         {
             var constructor =
                  SyntaxFactory.ConstructorDeclaration(unionCase.UserDefinedClass.Identifier)

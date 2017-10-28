@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace CSharpDiscriminatedUnion.Generation.Generators
+namespace CSharpDiscriminatedUnion.Generation.Generators.Class
 {
     /// <summary>
     /// Generate the Match implementation for the case classes
     /// </summary>
-    internal class GenerateMatchImplementation : IDiscriminatedUnionGenerator<ClassDiscriminatedUnionCase>
+    internal class GenerateMatchImplementation : IDiscriminatedUnionGenerator<DiscriminatedUnionCase>
     {
-        public DiscriminatedUnionContext<ClassDiscriminatedUnionCase> Build(DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context)
+        public DiscriminatedUnionContext<DiscriminatedUnionCase> Build(DiscriminatedUnionContext<DiscriminatedUnionCase> context)
         {
             if (context.Cases.IsEmpty)
             {
@@ -27,8 +27,8 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         }
 
         private static MemberDeclarationSyntax GetMatchImplementation(
-            DiscriminatedUnionContext<ClassDiscriminatedUnionCase> context,
-            ClassDiscriminatedUnionCase currentCase)
+            DiscriminatedUnionContext<DiscriminatedUnionCase> context,
+            DiscriminatedUnionCase currentCase)
         {
             var match = GeneratorHelpers.CreateMatchMethod(context.Cases, context.MatchGenericParameter)
                              .WithModifiers(
@@ -42,8 +42,8 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         }
 
         private static BlockSyntax GetMatchBlock(
-            ImmutableArray<ClassDiscriminatedUnionCase> cases,
-            ClassDiscriminatedUnionCase currentCase)
+            ImmutableArray<DiscriminatedUnionCase> cases,
+            DiscriminatedUnionCase currentCase)
         {
             StatementSyntax getReturnStatement()
             {
