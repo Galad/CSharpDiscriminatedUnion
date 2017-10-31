@@ -10,39 +10,13 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators.Class
 {
-    internal sealed class GenerateCaseGetHashCode : IDiscriminatedUnionGenerator<DiscriminatedUnionCase>
+    internal sealed class GenerateCaseGetHashCode : GenerateGetHashCode<DiscriminatedUnionCase>
     {
-        private const int PrimeNumber = 16777619;
-        private const string PrimeConstant = "prime";
-        private const string HashCodeVariable = "hash";
-        private static readonly IdentifierNameSyntax HashCodeVariableIdentifier = IdentifierName(HashCodeVariable);
-
-        public DiscriminatedUnionContext<DiscriminatedUnionCase> Build(DiscriminatedUnionContext<DiscriminatedUnionCase> context)
+        public override DiscriminatedUnionContext<DiscriminatedUnionCase> Build(DiscriminatedUnionContext<DiscriminatedUnionCase> context)
         {
-            return context.WithCases(context.Cases.Select(c => c.AddMember(GenerateGetHashCode(c))).ToImmutableArray());
+            return context.WithCases(context.Cases.Select(c => c.AddMember(GenerateGetHashCodeMethod(GenerateGetHashCodeBody(c)))).ToImmutableArray());
         }
-
-        private MemberDeclarationSyntax GenerateGetHashCode(DiscriminatedUnionCase c)
-        {
-            return MethodDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)), "GetHashCode")
-                .WithModifiers(
-                    TokenList(
-                        Token(SyntaxKind.PublicKeyword),
-                        Token(SyntaxKind.OverrideKeyword)
-                    )
-                )
-                .WithBody(
-                    Block(
-                        SingletonList<StatementSyntax>(
-                            CheckedStatement(
-                                SyntaxKind.UncheckedStatement,
-                                Block(GenerateGetHashCodeBody(c))
-                            )
-                        )
-                    )
-                );
-        }
-
+        
         private IEnumerable<StatementSyntax> GenerateGetHashCodeBody(DiscriminatedUnionCase @case)
         {
             if (@case.CaseValues.Length == 0)
@@ -67,128 +41,5 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
             yield return ReturnStatement(HashCodeVariableIdentifier);
         }
 
-        private static StatementSyntax GenerateHashCodeForFieldValue(ExpressionSyntax hashCode)
-        {
-            return ExpressionStatement(
-                AssignmentExpression(
-                    SyntaxKind.SimpleAssignmentExpression,
-                    HashCodeVariableIdentifier,
-                    BinaryExpression(
-                        SyntaxKind.ExclusiveOrExpression,
-                        ParenthesizedExpression(
-                            BinaryExpression(
-                                SyntaxKind.MultiplyExpression,
-                                HashCodeVariableIdentifier,
-                                IdentifierName(PrimeConstant)
-                            )
-                        ),
-                        hashCode
-                    )
-                )
-            );
-        }
-
-        private static StatementSyntax DeclareHashCodeVariable()
-        {
-            return LocalDeclarationStatement(
-                    VariableDeclaration(
-                        PredefinedType(
-                            Token(SyntaxKind.IntKeyword)
-                        )
-                    )
-                    .WithVariables(
-                        SingletonSeparatedList(
-                            VariableDeclarator(HashCodeVariable)
-                            .WithInitializer(
-                                EqualsValueClause(
-                                    CastExpression(
-                                        PredefinedType(
-                                            Token(SyntaxKind.IntKeyword)
-                                        ),
-                                        LiteralExpression(
-                                            SyntaxKind.NumericLiteralExpression,
-                                            Literal(2166136261)
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                );                                    
-        }
-
-        private static StatementSyntax DeclarePrimeConstant()
-        {
-            return LocalDeclarationStatement(
-                        VariableDeclaration(
-                            PredefinedType(
-                                Token(SyntaxKind.IntKeyword)
-                            )
-                        )
-                        .WithVariables(
-                            SingletonSeparatedList<VariableDeclaratorSyntax>(
-                                VariableDeclarator(
-                                    Identifier(PrimeConstant)
-                                )
-                                .WithInitializer(
-                                    EqualsValueClause(
-                                        LiteralExpression(
-                                            SyntaxKind.NumericLiteralExpression,
-                                            Literal(PrimeNumber)
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                    .WithModifiers(
-                        TokenList(
-                            Token(SyntaxKind.ConstKeyword)
-                        )
-                    );
-        }
-
-        private ExpressionSyntax HashCodeForCaseValue(CaseValue caseValue)
-        {
-            if (caseValue.SymbolInfo.IsValueType)
-            {
-                return InvocationExpression(
-                    MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        IdentifierName(caseValue.Name),
-                        IdentifierName("GetHashCode")
-                    )
-                );
-            }
-            return InvocationExpression(
-                        MemberAccessExpression(
-                            SyntaxKind.SimpleMemberAccessExpression,
-                            ParenthesizedExpression(
-                                ConditionalAccessExpression(
-                                    IdentifierName(caseValue.Name),
-                                    InvocationExpression(
-                                        MemberBindingExpression(IdentifierName("GetHashCode"))
-                                    )
-                                )
-                            ),
-                            IdentifierName("GetValueOrDefault")
-                        )
-                    )
-                    .WithArgumentList(
-                        ArgumentList(
-                            SingletonSeparatedList(
-                                Argument(
-                                    PrefixUnaryExpression(
-                                        SyntaxKind.UnaryMinusExpression,
-                                        LiteralExpression(
-                                            SyntaxKind.NumericLiteralExpression,
-                                            Literal(1)
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    );
-        }
     }
 }
