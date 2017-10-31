@@ -33,4 +33,11 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.UnionTypes
         {
         }
     }
+
+    [GenerateDiscriminatedUnion]
+    public partial struct StructEmail
+    {
+        [StructCase("Email")]
+        readonly string emailAddress;
+    }
 }

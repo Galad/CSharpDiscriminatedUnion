@@ -24,6 +24,6 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.EqualityFixtures
             }
         }
 
-        public override BooleanUnion AnonymousValue => BooleanUnion.True;
+        public override BooleanUnion AnonymousValue => BooleanUnion.False;
     }
 }

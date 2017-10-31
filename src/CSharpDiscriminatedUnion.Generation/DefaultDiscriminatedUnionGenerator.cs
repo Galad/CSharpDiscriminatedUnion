@@ -3,9 +3,9 @@ using CSharpDiscriminatedUnion.Generation.Generators.Class;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
-    internal sealed class ClassDiscriminatedUnionGenerator : AggregateDiscriminatedUnionGenerator<DiscriminatedUnionCase>
+    internal sealed class DefaultDiscriminatedUnionGenerator : AggregateDiscriminatedUnionGenerator<DiscriminatedUnionCase>
     {
-        public ClassDiscriminatedUnionGenerator(
+        public DefaultDiscriminatedUnionGenerator(
             string factoryPrefix,
             bool preventNull)
             : base(

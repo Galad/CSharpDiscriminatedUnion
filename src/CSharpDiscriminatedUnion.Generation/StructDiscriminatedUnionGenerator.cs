@@ -12,7 +12,10 @@ namespace CSharpDiscriminatedUnion.Generation
                   new GenerateStructCases(),
                   new GenerateTagField<StructDiscriminatedUnionCase>(),
                   new GenerateStructConstructor(),
-                  new GenerateStructCasesFactoryMethods(factoryPrefix, preventNull)
+                  new GenerateStructCasesFactoryMethods(factoryPrefix, preventNull),
+                  new GenerateStructEquatable(),
+                  new GenerateBaseEqualsOperatorOverload<StructDiscriminatedUnionCase>(),
+                  new GenerateStructEqualsOverride()
                   )
         {            
         }

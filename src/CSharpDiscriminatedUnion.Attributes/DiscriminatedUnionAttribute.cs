@@ -58,7 +58,7 @@ namespace CSharpDiscriminatedUnion.Attributes
     ///     }
     /// }
     /// </example>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Field, Inherited = false, AllowMultiple = true)]
     public class StructCaseAttribute : Attribute
     {
         /// <summary>

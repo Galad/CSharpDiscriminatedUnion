@@ -34,7 +34,7 @@ namespace CSharpDiscriminatedUnion.Generation
         }
 
         public Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(MemberDeclarationSyntax applyTo, CSharpCompilation compilation, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
-        {
+        {           
             var semanticModel = compilation.GetSemanticModel(applyTo.SyntaxTree);
             if (applyTo is ClassDeclarationSyntax applyToClass)
             {
@@ -74,7 +74,7 @@ namespace CSharpDiscriminatedUnion.Generation
 
         private Task<SyntaxList<MemberDeclarationSyntax>> GenerateForClass(MemberDeclarationSyntax applyTo, SemanticModel semanticModel, ClassDeclarationSyntax applyToClass)
         {
-            var generator = new ClassDiscriminatedUnionGenerator(_caseFactoryPrefix, _preventNullValues);
+            var generator = new DefaultDiscriminatedUnionGenerator(_caseFactoryPrefix, _preventNullValues);
             var applyToClassSymbolInfo = semanticModel.GetDeclaredSymbol(applyTo) as INamedTypeSymbol;
             if (applyToClassSymbolInfo == null)
             {
@@ -193,22 +193,22 @@ namespace CSharpDiscriminatedUnion.Generation
                    .AddModifiers(
                        Token(SyntaxKind.PartialKeyword)
                        )
-                   //.AddBaseListTypes(
-                   //    SimpleBaseType(
-                   //        QualifiedName(
-                   //            IdentifierName("System"),
-                   //            GenericName(
-                   //                Identifier("IEquatable")
-                   //            )
-                   //            .WithTypeArgumentList(
-                   //                TypeArgumentList(
-                   //                    SingletonSeparatedList(typeSyntax)
-                   //                )
-                   //            )
-                   //        )
-                   //    )
-                   //);
-                   ;
+                   .AddBaseListTypes(
+                       SimpleBaseType(
+                           QualifiedName(
+                               IdentifierName("System"),
+                               GenericName(
+                                   Identifier("IEquatable")
+                               )
+                               .WithTypeArgumentList(
+                                   TypeArgumentList(
+                                       SingletonSeparatedList(typeSyntax)
+                                   )
+                               )
+                           )
+                       )
+                   );
+            ;
         }
 
         private static (FieldDeclarationSyntax, SymbolInfo)[] GetCaseParameters(ClassDeclarationSyntax singleCase, SemanticModel semanticModel)
@@ -216,15 +216,7 @@ namespace CSharpDiscriminatedUnion.Generation
             return singleCase.ChildNodes()
                              .OfType<FieldDeclarationSyntax>()
                              .Where(f => f.Modifiers.Any(m => m.Kind() == SyntaxKind.ReadOnlyKeyword && m.Kind() != SyntaxKind.StaticKeyword))
-                             .Select(f => (f, semanticModel.GetSymbolInfo(f.Declaration.Type)))
-                             .Select(f =>
-                             {
-                                 //Debug(f.Item1.Declaration.Variables[0].Identifier.Text);
-                                 //Debug(f.Item2.GetType().FullName);
-                                 //Debug(f.Item2.Symbol.GetType().FullName);
-                                 //SourceTypeParameterSymbol
-                                 return f;
-                             })
+                             .Select(f => (f, semanticModel.GetSymbolInfo(f.Declaration.Type)))                         
                              .ToArray();
         }
 
@@ -253,16 +245,36 @@ namespace CSharpDiscriminatedUnion.Generation
             StructDeclarationSyntax applyTo,
             SemanticModel semanticModel)
         {
+            var caseAttributeType = semanticModel.Compilation.GetTypeByMetadataName(typeof(StructCaseAttribute).FullName);
             var casesClass = applyTo.ChildNodes()
                                     .OfType<ClassDeclarationSyntax>()
-                                    .Single(c => c.Identifier.ValueText == "Cases");
-            var symbol = semanticModel.GetDeclaredSymbol(casesClass);
-            //singleton cases
-            var singletonCases = symbol.GetAttributes()
-                                       .Select(a => (string)a.ConstructorArguments[0].Value)
-                                       .Select((c, i) => new StructDiscriminatedUnionCase(Identifier(c), ImmutableArray<CaseValue>.Empty, i));
+                                    .SingleOrDefault(c => c.Identifier.ValueText == "Cases");
+            if (casesClass != null)
+            {
+                var symbol = semanticModel.GetDeclaredSymbol(casesClass);
+                //singleton cases
+                var singletonCases = symbol.GetAttributes()
+                                           .Select(a => (string)a.ConstructorArguments[0].Value)
+                                           .Select((c, i) => new StructDiscriminatedUnionCase(Identifier(c), ImmutableArray<CaseValue>.Empty, i));
 
-            return singletonCases.ToImmutableArray();
+                return singletonCases.ToImmutableArray();
+            }            
+            var casesField = applyTo.ChildNodes()
+                                     .OfType<FieldDeclarationSyntax>()
+                                     .Single();
+            var fieldSymbol = semanticModel.GetDeclaredSymbol(casesField.Declaration.Variables.Single()) as IFieldSymbol;
+            ImmutableArray<CaseValue> getFieldCaseValues(IFieldSymbol symbol)
+            {
+                return ImmutableArray.Create(
+                    new CaseValue(casesField, symbol.Type)
+                    );
+            }
+            var fieldCase = fieldSymbol.GetAttributes()
+                                       .Where(a => a.AttributeClass == caseAttributeType)
+                                       .Select(a => (string)a.ConstructorArguments[0].Value)
+                                       .Select((c, i) => new StructDiscriminatedUnionCase(Identifier(c), getFieldCaseValues(fieldSymbol), i))
+                                       .Single();
+            return ImmutableArray.Create(fieldCase);
         }
 
         private ClassDeclarationSyntax CreateEmptyCasesPartialClass()

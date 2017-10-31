@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators
 {
-    internal static class GeneratorHelpers
+    internal static partial class GeneratorHelpers
     {
         public static MethodDeclarationSyntax CreateMatchMethod(ImmutableArray<DiscriminatedUnionCase> cases, SyntaxToken generateParameterName)
         {
@@ -172,5 +172,28 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             }
             return Identifier(GeneratedMatchGenericParameter + i.ToString());
         }
+
+        public static readonly MethodDeclarationSyntax EqualOverrideMethodDeclarationSyntax = MethodDeclaration(
+                PredefinedType(Token(SyntaxKind.BoolKeyword)),
+                "Equals"
+            )
+            .WithParameterList(
+                ParameterList(
+                    SingletonSeparatedList(
+                        Parameter(Identifier("obj"))
+                        .WithType(
+                            PredefinedType(
+                                Token(SyntaxKind.ObjectKeyword)
+                            )
+                        )
+                    )
+                )
+            )
+            .WithModifiers(
+                TokenList(
+                    Token(SyntaxKind.PublicKeyword),
+                    Token(SyntaxKind.OverrideKeyword)
+                )
+            );
     }
 }

@@ -21,29 +21,8 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
 
         private static MemberDeclarationSyntax GenerateEqualsOverride(DiscriminatedUnionContext<T> context)
         {
-            return MethodDeclaration(
-                PredefinedType(Token(SyntaxKind.BoolKeyword)),
-                "Equals"
-            )
-            .WithParameterList(
-                ParameterList(
-                    SingletonSeparatedList(
-                        Parameter(Identifier("obj"))
-                        .WithType(
-                            PredefinedType(
-                                Token(SyntaxKind.ObjectKeyword)
-                            )
-                        )
-                    )
-                )
-            )
-            .WithModifiers(
-                TokenList(
-                    Token(SyntaxKind.PublicKeyword),
-                    Token(SyntaxKind.OverrideKeyword)
-                )
-            )
-            .WithBody(Block(GenerateEqualsStatements(context)));
+            return GeneratorHelpers.EqualOverrideMethodDeclarationSyntax
+                                   .WithBody(Block(GenerateEqualsStatements(context)));
         }
 
         private static StatementSyntax GenerateEqualsStatements(DiscriminatedUnionContext<T> context)

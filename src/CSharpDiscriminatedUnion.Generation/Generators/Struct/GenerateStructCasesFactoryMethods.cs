@@ -23,13 +23,18 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
                     .WithArgumentList(
                         ArgumentList(
                             SingletonSeparatedList(
-                                Argument(                                
-                                    LiteralExpression(
-                                        Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression,
-                                        Literal(@case.CaseNumber)
-                                    )
-                                )
+                                CreateTagArgument(@case)
                             )
+                        )
+                    );
+        }
+
+        private static ArgumentSyntax CreateTagArgument(StructDiscriminatedUnionCase @case)
+        {
+            return Argument(
+                        LiteralExpression(
+                            Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression,
+                            Literal(@case.CaseNumber)
                         )
                     );
         }
@@ -38,7 +43,16 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             DiscriminatedUnionContext<StructDiscriminatedUnionCase> context,
             StructDiscriminatedUnionCase @case)
         {
-            throw new NotImplementedException();
+            return ObjectCreationExpression(context.Type)
+                    .WithArgumentList(
+                        ArgumentList(
+                            SeparatedList(
+                                new[] { CreateTagArgument(@case)}.Concat(
+                                    context.Cases.SelectMany(c =>  c.CaseValues.Select(p => Argument(IdentifierName(p.Name))))
+                                )
+                            )
+                        )
+                    );
         }
     }
 }
