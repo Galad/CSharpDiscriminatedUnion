@@ -254,6 +254,7 @@ namespace CSharpDiscriminatedUnion.Generation
                 var symbol = semanticModel.GetDeclaredSymbol(casesClass);
                 //singleton cases
                 var singletonCases = symbol.GetAttributes()
+                                           .OrderByDescending(a => (bool)a.ConstructorArguments[1].Value)
                                            .Select(a => (string)a.ConstructorArguments[0].Value)
                                            .Select((c, i) => new StructDiscriminatedUnionCase(Identifier(c), ImmutableArray<CaseValue>.Empty, i));
 
