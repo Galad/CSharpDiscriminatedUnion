@@ -17,4 +17,25 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.UnionTypes
         [StructCase("Book")]
         readonly string title;
     }
+
+    [GenerateDiscriminatedUnion]
+    public partial struct MediaStruct
+    {
+        [StructCase("Book")]
+        readonly string author;
+        [StructCase("Book")]
+        readonly int pages;
+        [StructCase("Book")]
+        readonly string bookTitle;
+        [StructCase("Movie")]
+        readonly string director;
+        [StructCase("Movie")]
+        readonly TimeSpan duration;
+        [StructCase("Movie")]
+        readonly string movieTitle;
+        [StructCase("TvSeries")]
+        readonly string tvSeriesTitle;
+        [StructCase("TvSeries")]
+        readonly int episodes;        
+    }
 }

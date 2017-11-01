@@ -47,12 +47,23 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
                     .WithArgumentList(
                         ArgumentList(
                             SeparatedList(
-                                new[] { CreateTagArgument(@case)}.Concat(
-                                    context.Cases.SelectMany(c =>  c.CaseValues.Select(p => Argument(IdentifierName(p.Name))))
+                                (new[] { CreateTagArgument(@case) }).Concat(
+                                    context.Cases.SelectMany(c => GenerateArgumentsForCase(c, @case))
                                 )
                             )
                         )
                     );
+        }
+
+        private static IEnumerable<ArgumentSyntax> GenerateArgumentsForCase(
+            StructDiscriminatedUnionCase @case, 
+            StructDiscriminatedUnionCase currentCase)
+        {
+            if(@case.CaseNumber != currentCase.CaseNumber)
+            {
+                return @case.CaseValues.Select(c => Argument(DefaultExpression(c.Type)));
+            }
+            return @case.CaseValues.Select(c => Argument(IdentifierName(c.Name)));
         }
     }
 }

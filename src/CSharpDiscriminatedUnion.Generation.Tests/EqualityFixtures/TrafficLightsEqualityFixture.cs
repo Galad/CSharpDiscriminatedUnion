@@ -35,32 +35,4 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.EqualityFixtures
 
         public override TrafficLights AnonymousValue => TrafficLights.Green;        
     }
-
-    public class TrafficLightsStructEqualityFixture : UnionEqualityFixture<TrafficLightsStruct>
-    {
-        public override IEnumerable<Func<TrafficLightsStruct>> SameValues
-        {
-            get
-            {
-                yield return () => TrafficLightsStruct.Red;
-                yield return () => TrafficLightsStruct.Green;
-                yield return () => TrafficLightsStruct.Orange;
-            }
-        }
-
-        public override IEnumerable<(TrafficLightsStruct, TrafficLightsStruct)> DifferentValues
-        {
-            get
-            {
-                yield return (TrafficLightsStruct.Red, TrafficLightsStruct.Green);
-                yield return (TrafficLightsStruct.Red, TrafficLightsStruct.Orange);
-                yield return (TrafficLightsStruct.Green, TrafficLightsStruct.Red);
-                yield return (TrafficLightsStruct.Green, TrafficLightsStruct.Orange);
-                yield return (TrafficLightsStruct.Orange, TrafficLightsStruct.Red);
-                yield return (TrafficLightsStruct.Orange, TrafficLightsStruct.Green);
-            }
-        }
-
-        public override TrafficLightsStruct AnonymousValue => TrafficLightsStruct.Green;
-    }
 }
