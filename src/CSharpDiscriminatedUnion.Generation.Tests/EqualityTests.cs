@@ -20,6 +20,8 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
     [TestFixture(typeof(BooleanUnion), typeof(BooleanUnionStructEqualityFixture))]
     [TestFixture(typeof(TrafficLightsStruct), typeof(TrafficLightsStructEqualityFixture))]
     [TestFixture(typeof(StructEmail), typeof(StructEmailEqualityFixture))]
+    [TestFixture(typeof(StructBook), typeof(StructBookEqualityFixture))]
+    [TestFixture(typeof(MediaStruct), typeof(MediaStructEqualityFixture))]
     public class EqualityTests<T, TFixtureData>
         where TFixtureData : UnionEqualityFixture<T>, new()
         where T : IEquatable<T>
