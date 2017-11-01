@@ -6,6 +6,7 @@
     <AssemblyOriginatorKeyFile>..\key.snk</AssemblyOriginatorKeyFile>
     <PackageId>CSharpDiscriminatedUnion.Attributes</PackageId>
     <Description>Contains the attributes for the nuget package CSharpDiscriminatedUnion</Description>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -5,6 +5,7 @@
     <TargetFramework>net46</TargetFramework>
     <!-- Workaround for https://github.com/nunit/nunit3-vs-adapter/issues/296 -->
     <DebugType>Full</DebugType>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
