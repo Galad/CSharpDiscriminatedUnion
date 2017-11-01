@@ -34,7 +34,7 @@ namespace CSharpDiscriminatedUnion.Generation
         }
 
         public Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(MemberDeclarationSyntax applyTo, CSharpCompilation compilation, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
-        {           
+        {
             var semanticModel = compilation.GetSemanticModel(applyTo.SyntaxTree);
             if (applyTo is ClassDeclarationSyntax applyToClass)
             {
@@ -216,7 +216,7 @@ namespace CSharpDiscriminatedUnion.Generation
             return singleCase.ChildNodes()
                              .OfType<FieldDeclarationSyntax>()
                              .Where(f => f.Modifiers.Any(m => m.Kind() == SyntaxKind.ReadOnlyKeyword && m.Kind() != SyntaxKind.StaticKeyword))
-                             .Select(f => (f, semanticModel.GetSymbolInfo(f.Declaration.Type)))                         
+                             .Select(f => (f, semanticModel.GetSymbolInfo(f.Declaration.Type)))
                              .ToArray();
         }
 
@@ -245,6 +245,10 @@ namespace CSharpDiscriminatedUnion.Generation
             StructDeclarationSyntax applyTo,
             SemanticModel semanticModel)
         {
+            //if(applyTo.Identifier.Text == "StructBook")
+            //{
+            //    Debugger.Break();
+            //}
             var caseAttributeType = semanticModel.Compilation.GetTypeByMetadataName(typeof(StructCaseAttribute).FullName);
             var casesClass = applyTo.ChildNodes()
                                     .OfType<ClassDeclarationSyntax>()
@@ -259,23 +263,28 @@ namespace CSharpDiscriminatedUnion.Generation
                                            .Select((c, i) => new StructDiscriminatedUnionCase(Identifier(c), ImmutableArray<CaseValue>.Empty, i));
 
                 return singletonCases.ToImmutableArray();
-            }            
+            }
+            StructDiscriminatedUnionCase getCase(int caseNumber, string caseName, IEnumerable<(FieldDeclarationSyntax, IFieldSymbol)> symbols)
+            {
+                return new StructDiscriminatedUnionCase(
+                    Identifier(caseName),
+                    symbols.Select(s => new CaseValue(s.Item1, s.Item2.Type)).ToImmutableArray(),
+                    caseNumber
+                );
+            }
             var casesField = applyTo.ChildNodes()
                                      .OfType<FieldDeclarationSyntax>()
-                                     .Single();
-            var fieldSymbol = semanticModel.GetDeclaredSymbol(casesField.Declaration.Variables.Single()) as IFieldSymbol;
-            ImmutableArray<CaseValue> getFieldCaseValues(IFieldSymbol symbol)
-            {
-                return ImmutableArray.Create(
-                    new CaseValue(casesField, symbol.Type)
-                    );
-            }
-            var fieldCase = fieldSymbol.GetAttributes()
-                                       .Where(a => a.AttributeClass == caseAttributeType)
-                                       .Select(a => (string)a.ConstructorArguments[0].Value)
-                                       .Select((c, i) => new StructDiscriminatedUnionCase(Identifier(c), getFieldCaseValues(fieldSymbol), i))
-                                       .Single();
-            return ImmutableArray.Create(fieldCase);
+                                     .Select(f =>
+                                     {
+                                         var symbol = semanticModel.GetDeclaredSymbol(f.Declaration.Variables.Single()) as IFieldSymbol;
+                                         var attribute = symbol.GetAttributes().Where(a => a.AttributeClass == caseAttributeType).Single();
+                                         var name = (string)attribute.ConstructorArguments[0].Value;
+                                         return (declaration: f, symbol, name);
+                                     })                                     
+                                     .GroupBy(f => f.name)
+                                     .Select((g, i) => getCase(i, g.Key, g.Select(f => (f.declaration, f.symbol))))
+                                     .ToImmutableArray();
+            return casesField;
         }
 
         private ClassDeclarationSyntax CreateEmptyCasesPartialClass()
