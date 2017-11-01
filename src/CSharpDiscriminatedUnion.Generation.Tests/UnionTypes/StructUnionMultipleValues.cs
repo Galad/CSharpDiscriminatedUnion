@@ -38,4 +38,20 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.UnionTypes
         [StructCase("TvSeries")]
         readonly int episodes;        
     }
+
+    [GenerateDiscriminatedUnion]
+    public partial struct StructShape
+    {        
+        [StructCase("Line")]
+        partial class Cases
+        {
+        }
+
+        [StructCase("Circle")]
+        readonly double radius;
+        [StructCase("Rectangle")]
+        readonly double length;
+        [StructCase("Rectangle")]
+        readonly double width;
+    }
 }
