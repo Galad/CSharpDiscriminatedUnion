@@ -30,8 +30,8 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
                     .Concat(NullTestCase)
                     .Concat(new[]
                     {
-                        new TestCaseData(default(Book), default(Book)).Returns(true).SetName<T>(),
-                        new TestCaseData(default(Book), AnonymousValue).Returns(false).SetName<T>(),
+                        new TestCaseData(default(T), default(T)).Returns(true).SetName<T>(),
+                        new TestCaseData(default(T), AnonymousValue).Returns(false).SetName<T>(),
                     });
             }
         }

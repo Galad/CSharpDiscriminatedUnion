@@ -1,24 +1,27 @@
 ﻿using CSharpDiscriminatedUnion.Generation.Generators;
+using CSharpDiscriminatedUnion.Generation.Generators.Class;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
-    internal sealed class DefaultDiscriminatedUnionGenerator : AggregateDiscriminatedUnionGenerator
+    internal sealed class DefaultDiscriminatedUnionGenerator : AggregateDiscriminatedUnionGenerator<DiscriminatedUnionCase>
     {
-        public DefaultDiscriminatedUnionGenerator()
+        public DefaultDiscriminatedUnionGenerator(
+            string factoryPrefix,
+            bool preventNull)
             : base(
-                  new ApplyGenericArguments(),
-                  new GeneratePrivateConstructor(),
+                  new ApplyGenericArguments<DiscriminatedUnionCase>(),
+                  new GeneratePrivateConstructor<DiscriminatedUnionCase>(),
                   new CreateCasesPartialClassConstructor(),
-                  new GenerateCaseFactoryMethods(),
+                  new GenerateClassCasesFactoryMethods(factoryPrefix, preventNull),
                   new GenerateAbstractMatchMethod(),
                   new GenerateMatchImplementation(),
-                  new GenerateAbstractEquatableImplementation(),
+                  new GenerateAbstractEquatableImplementation<DiscriminatedUnionCase>(),
                   new GenerateCaseEquatableImplementation(),
-                  new GenerateBaseEqualsOverride(),
-                  new GenerateBaseEqualsOperatorOverload(),
+                  new GenerateBaseEqualsOverride<DiscriminatedUnionCase>(),
+                  new GenerateBaseEqualsOperatorOverload<DiscriminatedUnionCase>(),
                   new GenerateCaseGetHashCode(),
-                  new AddGeneratedCodeAttribute("DiscriminitedUnion", "1.0"),
-                  new GenerateBaseGetHashCodeImplementation()
+                  new AddGeneratedCodeAttribute<DiscriminatedUnionCase>("DiscriminitedUnion", "1.0"),
+                  new GenerateBaseGetHashCodeImplementation<DiscriminatedUnionCase>()
                   )
         {
         }

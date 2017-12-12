@@ -5,7 +5,7 @@ using CSharpDiscriminatedUnion.Generation.Tests.UnionTypes;
 using System.Collections.Generic;
 using System;
 
-namespace CSharpDiscriminatedUnion.Generation.Tests
+namespace CSharpDiscriminatedUnion.Generation.Tests.Class
 {
     public class SingleCaseWithValueParameterTests
     {

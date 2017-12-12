@@ -6,7 +6,7 @@ using CSharpDiscriminatedUnion.Generation.Tests.UnionTypes;
 using System;
 using System.CodeDom.Compiler;
 
-namespace CSharpDiscriminatedUnion.Generation.Tests
+namespace CSharpDiscriminatedUnion.Generation.Tests.Class
 {
     [TestFixture(typeof(NoCaseUnion))]
     [TestFixture(typeof(NoCaseUnionGeneric<object>))]
@@ -28,6 +28,9 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
     [TestFixture(typeof(Either<int, int>))]
     [TestFixture(typeof(Either<int, double>))]
     [TestFixture(typeof(Either<int, string>))]
+    [TestFixture(typeof(PreventNull1))]
+    [TestFixture(typeof(PreventNull2))]
+    [TestFixture(typeof(PreventNull3<string>))]
     public class CommonPropertiesTests<T>
     {        
         private static IEnumerable<TestCaseData> TestSource

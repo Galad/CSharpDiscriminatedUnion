@@ -8,9 +8,9 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     /// <summary>
     /// Generate the implementation of the <see cref="IEquatable.Equals"/> method
     /// </summary>
-    internal class GenerateAbstractEquatableImplementation : IDiscriminatedUnionGenerator
+    internal class GenerateAbstractEquatableImplementation<T> : IDiscriminatedUnionGenerator<T> where T : IDiscriminatedUnionCase
     {
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)
         {
             return context.AddMember(AddEqualityImplementations(context.Type));
         }

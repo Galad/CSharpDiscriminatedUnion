@@ -1,7 +1,6 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.13
+VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpDiscriminatedUnion.Generation", "CSharpDiscriminatedUnion.Generation\CSharpDiscriminatedUnion.Generation.csproj", "{34A9C917-3BDB-436E-B300-C18B60C3FE95}"
 EndProject
@@ -30,5 +29,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {601B68A4-653B-4D8D-A962-52EB706F8ABA}
 	EndGlobalSection
 EndGlobal

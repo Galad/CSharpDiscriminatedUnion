@@ -3,7 +3,7 @@ using System.Reflection;
 using NUnit.Framework;
 using CSharpDiscriminatedUnion.Generation.Tests.UnionTypes;
 
-namespace CSharpDiscriminatedUnion.Generation.Tests
+namespace CSharpDiscriminatedUnion.Generation.Tests.Class
 {
 
     public class SingleCaseWithMultipleParameterTests

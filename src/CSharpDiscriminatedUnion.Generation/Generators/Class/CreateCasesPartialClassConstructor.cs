@@ -7,14 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CSharpDiscriminatedUnion.Generation.Generators
+namespace CSharpDiscriminatedUnion.Generation.Generators.Class
 {
     /// <summary>
     /// Creates the constructor for the partial classes
     /// </summary>
-    internal sealed class CreateCasesPartialClassConstructor : IDiscriminatedUnionGenerator
+    internal sealed class CreateCasesPartialClassConstructor : IDiscriminatedUnionGenerator<DiscriminatedUnionCase>
     {
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<DiscriminatedUnionCase> Build(DiscriminatedUnionContext<DiscriminatedUnionCase> context)
         {            
             var cases = context.Cases
                                .Select(c => c.AddMember(CreateCasePartialClassConstructor(c)))

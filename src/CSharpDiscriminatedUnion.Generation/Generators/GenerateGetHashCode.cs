@@ -1,28 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators
 {
-    internal sealed class GenerateCaseGetHashCode : IDiscriminatedUnionGenerator
+    internal abstract class GenerateGetHashCode<T> : IDiscriminatedUnionGenerator<T> where T : IDiscriminatedUnionCase
     {
         private const int PrimeNumber = 16777619;
         private const string PrimeConstant = "prime";
-        private const string HashCodeVariable = "hash";
-        private static readonly IdentifierNameSyntax HashCodeVariableIdentifier = IdentifierName(HashCodeVariable);
+        protected const string HashCodeVariable = "hash";
+        protected static readonly IdentifierNameSyntax HashCodeVariableIdentifier = IdentifierName(HashCodeVariable);
 
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
-        {
-            return context.WithCases(context.Cases.Select(c => c.AddMember(GenerateGetHashCode(c))).ToImmutableArray());
-        }
+        public abstract DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context);
 
-        private MemberDeclarationSyntax GenerateGetHashCode(DiscriminatedUnionCase c)
+        protected MemberDeclarationSyntax GenerateGetHashCodeMethod(IEnumerable<StatementSyntax> statements)
         {
             return MethodDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)), "GetHashCode")
                 .WithModifiers(
@@ -36,49 +28,14 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                         SingletonList<StatementSyntax>(
                             CheckedStatement(
                                 SyntaxKind.UncheckedStatement,
-                                Block(GenerateGetHashCodeBody(c))
+                                Block(statements)
                             )
                         )
                     )
                 );
         }
-
-        private IEnumerable<StatementSyntax> GenerateGetHashCodeBody(DiscriminatedUnionCase @case)
-        {
-            if (@case.CaseValues.Length == 0)
-            {
-                yield return ReturnStatement(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(@case.CaseNumber)));
-                yield break;
-            }
-
-            yield return DeclarePrimeConstant();
-            yield return DeclareHashCodeVariable();
-            yield return GenerateHashCodeForFieldValue(
-                LiteralExpression(
-                    SyntaxKind.NumericLiteralExpression,
-                    Literal(@case.CaseNumber)
-                )
-            );
-            foreach (var caseValue in @case.CaseValues)
-            {
-                yield return GenerateHashCodeForFieldValue(HashCodeForCaseValue(caseValue));
-            }
-
-            yield return ReturnStatement(HashCodeVariableIdentifier);
-
-            //yield return ReturnStatement(
-            //    @case.CaseValues.Skip(1).Aggregate(
-            //        HashCodeForCaseValue(@case.CaseValues[0]),
-            //        (exp, c) =>
-            //        BinaryExpression(
-            //            SyntaxKind.ExclusiveOrExpression,
-            //            exp,
-            //            HashCodeForCaseValue(c))
-            //        )
-            //    );
-        }
-
-        private static StatementSyntax GenerateHashCodeForFieldValue(ExpressionSyntax hashCode)
+      
+        protected static StatementSyntax GenerateHashCodeForFieldValue(ExpressionSyntax hashCode)
         {
             return ExpressionStatement(
                 AssignmentExpression(
@@ -99,7 +56,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             );
         }
 
-        private static StatementSyntax DeclareHashCodeVariable()
+        protected static StatementSyntax DeclareHashCodeVariable()
         {
             return LocalDeclarationStatement(
                     VariableDeclaration(
@@ -128,7 +85,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                 );                                    
         }
 
-        private static StatementSyntax DeclarePrimeConstant()
+        protected static StatementSyntax DeclarePrimeConstant()
         {
             return LocalDeclarationStatement(
                         VariableDeclaration(
@@ -159,7 +116,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                     );
         }
 
-        private ExpressionSyntax HashCodeForCaseValue(CaseValue caseValue)
+        protected ExpressionSyntax HashCodeForCaseValue(CaseValue caseValue)
         {
             if (caseValue.SymbolInfo.IsValueType)
             {
