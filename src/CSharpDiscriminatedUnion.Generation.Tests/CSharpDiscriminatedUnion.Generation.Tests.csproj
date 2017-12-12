@@ -5,9 +5,11 @@
     <TargetFramework>net46</TargetFramework>
     <!-- Workaround for https://github.com/nunit/nunit3-vs-adapter/issues/296 -->
     <DebugType>Full</DebugType>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoFixture.Idioms" Version="3.50.2" />
     <PackageReference Include="CodeGeneration.Roslyn.BuildTime" Version="0.3.9" />
     <PackageReference Include="Microsoft.Build" Version="15.3.0-preview-000117-01" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.2.0" />

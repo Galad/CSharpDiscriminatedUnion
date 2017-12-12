@@ -12,38 +12,71 @@ using CSharpDiscriminatedUnion.Generation.Generators;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
-    internal struct DiscriminatedUnionContext
+    internal struct DiscriminatedUnionContext<T> where T : IDiscriminatedUnionCase
     {
         //the context information that is only read
         private class ReadonlyContext
         {
-            public ClassDeclarationSyntax UserDefinedClass;
+            public TypeDeclarationSyntax UserDefinedClass;
             public SemanticModel SemanticModel;
             public INamedTypeSymbol SymbolInfo;
             public TypeSyntax Type;
             public SyntaxToken MatchGenericParameter;
         }
 
-        public ClassDeclarationSyntax UserDefinedClass => _readonlyContext.UserDefinedClass;
+        public TypeDeclarationSyntax UserDefinedClass => _readonlyContext.UserDefinedClass;
+
+        public DiscriminatedUnionContext<T> WithTypeParameterList(TypeParameterListSyntax typeParameterListSyntax)
+        {
+            return WithGeneratedPartialClass(
+                Apply(c => c.WithTypeParameterList(typeParameterListSyntax), c => c.WithTypeParameterList(typeParameterListSyntax))
+                );
+        }
+
+        public DiscriminatedUnionContext<T> AddAttributeLists(AttributeListSyntax attributeList)
+        {
+            return WithGeneratedPartialClass(
+                Apply(c => c.AddAttributeLists(attributeList), c => c.AddAttributeLists(attributeList))
+                );
+        }
+
+        public DiscriminatedUnionContext<T> WithMembers(SyntaxList<MemberDeclarationSyntax> members)
+        {
+            return WithGeneratedPartialClass(
+               Apply(c => c.WithMembers(members), c => c.WithMembers(members))
+               );
+        }
+
+        private TypeDeclarationSyntax Apply(
+            Func<ClassDeclarationSyntax, TypeDeclarationSyntax> applyToClass,
+            Func<StructDeclarationSyntax, TypeDeclarationSyntax> applyToStruct)
+        {
+            if (GeneratedPartialClass.Kind() == Microsoft.CodeAnalysis.CSharp.SyntaxKind.ClassDeclaration)
+            {
+                return applyToClass(GeneratedPartialClass as ClassDeclarationSyntax);
+            }
+            return applyToStruct(GeneratedPartialClass as StructDeclarationSyntax);
+        }
+
         public SemanticModel SemanticModel => _readonlyContext.SemanticModel;
         public INamedTypeSymbol SymbolInfo => _readonlyContext.SymbolInfo;
         public SyntaxToken Name => UserDefinedClass.Identifier;
         public bool IsGeneric => SymbolInfo.IsGenericType;
         public TypeSyntax Type => _readonlyContext.Type;
         public SyntaxToken MatchGenericParameter => _readonlyContext.MatchGenericParameter;
-        public ImmutableArray<DiscriminatedUnionCase> Cases { get; }
+        public ImmutableArray<T> Cases { get; }
         public ImmutableArray<MemberDeclarationSyntax> Members { get; }
-        public ClassDeclarationSyntax GeneratedPartialClass { get; }
+        public TypeDeclarationSyntax GeneratedPartialClass { get; }
 
         private readonly ReadonlyContext _readonlyContext;
 
         public DiscriminatedUnionContext(
-            ClassDeclarationSyntax userDefinedClass,
+            TypeDeclarationSyntax userDefinedClass,
             TypeSyntax applyToClassType,
-            ClassDeclarationSyntax generatedPartialClass,
+            TypeDeclarationSyntax generatedPartialClass,
             SemanticModel semanticModel,
             INamedTypeSymbol symbolInfo,
-            ImmutableArray<DiscriminatedUnionCase> cases)
+            ImmutableArray<T> cases)
         {
             _readonlyContext = new ReadonlyContext()
             {
@@ -61,9 +94,9 @@ namespace CSharpDiscriminatedUnion.Generation
 
         private DiscriminatedUnionContext(
             ReadonlyContext readonlyContext,
-            ClassDeclarationSyntax generatedPartialClass,
+            TypeDeclarationSyntax generatedPartialClass,
             ImmutableArray<MemberDeclarationSyntax> members,
-            ImmutableArray<DiscriminatedUnionCase> cases)
+            ImmutableArray<T> cases)
         {
             _readonlyContext = readonlyContext;
             Members = members;
@@ -71,10 +104,10 @@ namespace CSharpDiscriminatedUnion.Generation
             GeneratedPartialClass = generatedPartialClass;
         }
 
-        public DiscriminatedUnionContext AddMember(MemberDeclarationSyntax member)
+        public DiscriminatedUnionContext<T> AddMember(MemberDeclarationSyntax member)
         {
             Requires.NotNull(member, nameof(member));
-            return new DiscriminatedUnionContext(
+            return new DiscriminatedUnionContext<T>(
                 _readonlyContext,
                 GeneratedPartialClass,
                 Members.Add(member),
@@ -82,10 +115,10 @@ namespace CSharpDiscriminatedUnion.Generation
                 );
         }
 
-        public DiscriminatedUnionContext AddMembers(IEnumerable<MemberDeclarationSyntax> members)
+        public DiscriminatedUnionContext<T> AddMembers(IEnumerable<MemberDeclarationSyntax> members)
         {
             Requires.NotNull(members, nameof(members));
-            return new DiscriminatedUnionContext(
+            return new DiscriminatedUnionContext<T>(
                 _readonlyContext,
                 GeneratedPartialClass,
                 Members.AddRange(members),
@@ -93,19 +126,19 @@ namespace CSharpDiscriminatedUnion.Generation
                 );
         }
 
-        public DiscriminatedUnionContext WithCases(ImmutableArray<DiscriminatedUnionCase> cases)
+        public DiscriminatedUnionContext<T> WithCases(ImmutableArray<T> cases)
         {
             Requires.That(!cases.IsDefault, nameof(cases), "The parameter cannot be the default value");
-            return new DiscriminatedUnionContext(
+            return new DiscriminatedUnionContext<T>(
                 _readonlyContext,
                 GeneratedPartialClass,
                 Members,
                 cases);
         }
 
-        public DiscriminatedUnionContext WithGeneratedPartialClass(ClassDeclarationSyntax generatedPartialClass)
+        public DiscriminatedUnionContext<T> WithGeneratedPartialClass(TypeDeclarationSyntax generatedPartialClass)
         {
-            return new DiscriminatedUnionContext(
+            return new DiscriminatedUnionContext<T>(
                 _readonlyContext,
                  Requires.NotNull(generatedPartialClass, nameof(generatedPartialClass)),
                 Members,

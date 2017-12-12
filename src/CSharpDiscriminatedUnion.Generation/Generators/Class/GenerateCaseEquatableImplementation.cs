@@ -9,16 +9,16 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System.Collections.Immutable;
 
-namespace CSharpDiscriminatedUnion.Generation.Generators
+namespace CSharpDiscriminatedUnion.Generation.Generators.Class
 {
     /// <summary>
     /// Generates the implementation of <see cref="IEquatable{T}.Equals(T)"/> in the case classes
     /// </summary>
-    internal sealed class GenerateCaseEquatableImplementation : IDiscriminatedUnionGenerator
+    internal sealed class GenerateCaseEquatableImplementation : IDiscriminatedUnionGenerator<DiscriminatedUnionCase>
     {
         private const string ParameterName = "obj";
 
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<DiscriminatedUnionCase> Build(DiscriminatedUnionContext<DiscriminatedUnionCase> context)
         {
             return context.WithCases(
                 context.Cases.Select(c => c.AddMember(GenerateEqualsImplementation(context.Type, c, context.Cases))).ToImmutableArray()

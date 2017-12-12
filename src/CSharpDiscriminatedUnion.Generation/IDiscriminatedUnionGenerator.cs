@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
-    internal interface IDiscriminatedUnionGenerator
+    internal interface IDiscriminatedUnionGenerator<T> where T : IDiscriminatedUnionCase
     {
-        DiscriminatedUnionContext Build(DiscriminatedUnionContext context);
+        DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context);
     }
 }

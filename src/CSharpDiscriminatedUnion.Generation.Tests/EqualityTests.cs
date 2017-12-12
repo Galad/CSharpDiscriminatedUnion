@@ -17,9 +17,14 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
     [TestFixture(typeof(Maybe<string>), typeof(MaybeEqualityReferenceFixture))]
     [TestFixture(typeof(Maybe<int>), typeof(MaybeEqualityValueFixture))]
     [TestFixture(typeof(Either<int, string>), typeof(EitherEqualityFixture))]
+    [TestFixture(typeof(BooleanUnion), typeof(BooleanUnionStructEqualityFixture))]
+    [TestFixture(typeof(TrafficLightsStruct), typeof(TrafficLightsStructEqualityFixture))]
+    [TestFixture(typeof(StructEmail), typeof(StructEmailEqualityFixture))]
+    [TestFixture(typeof(StructBook), typeof(StructBookEqualityFixture))]
+    [TestFixture(typeof(MediaStruct), typeof(MediaStructEqualityFixture))]
     public class EqualityTests<T, TFixtureData>
         where TFixtureData : UnionEqualityFixture<T>, new()
-        where T : class, IEquatable<T>
+        where T : IEquatable<T>
     {
         private static readonly TFixtureData Data = new TFixtureData();                
         public static IEnumerable<TestCaseData> EquatableEqualsTestCases => Data.EquatableEqualsTestCases;
@@ -53,14 +58,14 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
         [TestCaseSource(nameof(OperatorEqualityTestCases))]
         public bool EqualOperator_ShouldReturnCorrectValue(T actual, T other)
         {
-            return (bool)EqualOperatorMethod.Invoke(null, new[] { actual, other });
+            return (bool)EqualOperatorMethod.Invoke(null, new object[] { actual, other });
         }
 
         private static MethodInfo InequalOperatorMethod = typeof(T).GetMethod("op_Inequality", BindingFlags.Static | BindingFlags.Public);
         [TestCaseSource(nameof(OperatorInequalityTestCases))]
         public bool InequalOperator_ShouldReturnCorrectValue(T actual, T other)
         {
-            return (bool)InequalOperatorMethod.Invoke(null, new[] { actual, other });
+            return (bool)InequalOperatorMethod.Invoke(null, new object[] { actual, other });
         }
         
         [TestCaseSource(nameof(GetHashCodeSameValues))]

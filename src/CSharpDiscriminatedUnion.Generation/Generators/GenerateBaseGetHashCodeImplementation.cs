@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators
 {
-    internal sealed class GenerateBaseGetHashCodeImplementation : IDiscriminatedUnionGenerator
+    internal sealed class GenerateBaseGetHashCodeImplementation<T> : IDiscriminatedUnionGenerator<T> where T : IDiscriminatedUnionCase
     {
-        public DiscriminatedUnionContext Build(DiscriminatedUnionContext context)
+        public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)
         {
             return context.AddMember(
                 MethodDeclaration(

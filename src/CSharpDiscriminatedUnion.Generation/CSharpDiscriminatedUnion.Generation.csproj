@@ -7,6 +7,15 @@
     <IsTool>true</IsTool>
     <PackageId>CSharpDiscriminatedUnion</PackageId>
     <Description>Creates discriminated unions in C#. Define a template for a discriminated union and the appropriate code will be generated.</Description>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,13 +37,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CSharpDiscriminatedUnion.Attributes\CSharpDiscriminatedUnion.Attributes.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="bin\$(Configuration)\net46\CSharpDiscriminatedUnion.Attributes.dll">
-      <PackagePath>tools\</PackagePath>
-      <Pack>true</Pack>
-    </None>
   </ItemGroup>
 
 </Project>
