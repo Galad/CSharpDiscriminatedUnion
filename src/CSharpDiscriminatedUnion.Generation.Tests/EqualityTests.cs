@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System;
 using CSharpDiscriminatedUnion.Generation.Tests.EqualityFixtures;
 
+[assembly: Parallelizable(ParallelScope.All)]
+
 namespace CSharpDiscriminatedUnion.Generation.Tests
 {
     [TestFixture(typeof(Book), typeof(BookEqualityFixture))]
@@ -24,6 +26,12 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
     [TestFixture(typeof(MediaStruct), typeof(MediaStructEqualityFixture))]    
     [TestFixture(typeof(IOStruct<int>), typeof(IOStructIntEqualityFixture))]
     [TestFixture(typeof(IOStruct<string>), typeof(IOStructStringEqualityFixture))]
+    [TestFixture(typeof(EitherStruct<int>), typeof(EitherStructIntEqualityFixture))]
+    [TestFixture(typeof(EitherStruct<string>), typeof(EitherStructStringEqualityFixture))]
+    [TestFixture(typeof(EitherStruct2<int, int>), typeof(EitherStruct2IntIntEqualityFixture))]
+    [TestFixture(typeof(EitherStruct2<int, string>), typeof(EitherStruct2IntStringEqualityFixture))]
+    [TestFixture(typeof(EitherStruct2<string, int>), typeof(EitherStruct2StringIntEqualityFixture))]
+    [TestFixture(typeof(EitherStruct2<string, string>), typeof(EitherStruct2StringStringEqualityFixture))]
     public class EqualityTests<T, TFixtureData>
         where TFixtureData : UnionEqualityFixture<T>, new()
         where T : IEquatable<T>

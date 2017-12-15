@@ -13,4 +13,22 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.UnionTypes
         [StructCase("IO")]
         readonly T value;
     }
+
+    [GenerateDiscriminatedUnion]
+    public partial struct EitherStruct<T>
+    {
+        [StructCase("Left")]
+        readonly T valueLeft;
+        [StructCase("Right")]
+        readonly T valueRight;
+    }
+
+    [GenerateDiscriminatedUnion]
+    public partial struct EitherStruct2<TLeft, TRight>
+    {
+        [StructCase("Left")]
+        readonly TLeft valueLeft;
+        [StructCase("Right")]
+        readonly TRight valueRight;
+    }
 }
