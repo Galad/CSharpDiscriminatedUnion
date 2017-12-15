@@ -9,6 +9,7 @@ namespace CSharpDiscriminatedUnion.Generation
             string factoryPrefix,
             bool preventNull)
             : base(
+                  new ApplyGenericArguments<StructDiscriminatedUnionCase>(),
                   new GenerateStructCases(),
                   new GenerateTagField<StructDiscriminatedUnionCase>(),
                   new GenerateStructConstructor(),

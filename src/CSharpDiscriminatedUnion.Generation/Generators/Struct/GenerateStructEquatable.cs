@@ -94,7 +94,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             });
         }
 
-        private BinaryExpressionSyntax GenerateCasesBinaryExpression(
+        private ExpressionSyntax GenerateCasesBinaryExpression(
             StructDiscriminatedUnionCase @case,
             BinaryExpressionSyntax binaryExpressionSyntax,
             int caseValueIndex = 0)
@@ -103,20 +103,55 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             {
                 return binaryExpressionSyntax;
             }
+           
             var andExpression = BinaryExpression(
                 SyntaxKind.LogicalAndExpression,
                 binaryExpressionSyntax,
-                BinaryExpression(
-                    SyntaxKind.EqualsExpression,
-                    MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        ThisExpression(),
-                        IdentifierName(@case.CaseValues[caseValueIndex].Name)
-                    ),
-                    MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        IdentifierName("value"),
-                        IdentifierName(@case.CaseValues[caseValueIndex].Name)
+                 InvocationExpression(
+                   MemberAccessExpression(
+                       SyntaxKind.SimpleMemberAccessExpression,
+                       MemberAccessExpression(
+                           SyntaxKind.SimpleMemberAccessExpression,
+                           QualifiedName(
+                               QualifiedName(
+                                   QualifiedName(
+                                       IdentifierName("System"),
+                                       IdentifierName("Collections")
+                                    ),
+                                   IdentifierName("Generic")
+                                ),
+                                GenericName(Identifier("EqualityComparer"))
+                                .WithTypeArgumentList(
+                                    TypeArgumentList(
+                                        SingletonSeparatedList<TypeSyntax>(@case.CaseValues[caseValueIndex].Type)
+                                    )
+                                )
+                            ),
+                           IdentifierName("Default")
+                        ),
+                        IdentifierName("Equals")
+                   )
+                ).WithArgumentList(
+                    ArgumentList(
+                        SeparatedList<ArgumentSyntax>(
+                            new SyntaxNodeOrToken[]{
+                                Argument(
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        ThisExpression(),
+                                        IdentifierName(@case.CaseValues[caseValueIndex].Name)
+                                    )
+                                ),
+                                Token(SyntaxKind.CommaToken),
+                                Argument(
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        IdentifierName("value"),
+                                        IdentifierName(@case.CaseValues[caseValueIndex].Name)
+                                    )
+                                )
+                            }
+                        )
                     )
                 )
             );

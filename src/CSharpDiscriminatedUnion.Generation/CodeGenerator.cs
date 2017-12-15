@@ -23,6 +23,7 @@ namespace CSharpDiscriminatedUnion.Generation
 
         public CodeGenerator(AttributeData attributeData)
         {
+            //Debugger.Launch();
             Requires.NotNull(attributeData, nameof(attributeData));
             var arguments = attributeData.NamedArguments.ToImmutableDictionary(kvp => kvp.Key, k => k.Value.Value);
             T GetAttributeValue<T>(string name, T defaultValue, T nullValue)
@@ -54,7 +55,7 @@ namespace CSharpDiscriminatedUnion.Generation
             if (applyToStructSymbolInfo == null)
             {
                 throw new InvalidOperationException($"applyTo symbol has not been found");
-            }
+            }            
             var applyToStructType = GetTypeSyntax(applyToStruct, applyToStructSymbolInfo);
             var structCases = GetStructCases(applyToStruct, semanticModel);
             var partialStruct = GetPartialStruct(applyToStruct, applyToStructType);
