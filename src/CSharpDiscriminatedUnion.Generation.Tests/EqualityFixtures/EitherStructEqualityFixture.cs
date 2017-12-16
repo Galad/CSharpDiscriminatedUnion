@@ -25,10 +25,8 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.EqualityFixtures
             get
             {
                 yield return (EitherStruct<int>.NewLeft(0), EitherStruct<int>.NewRight(0));
-                yield return (EitherStruct<int>.NewLeft(0), EitherStruct<int>.NewLeft(1));
-                yield return (EitherStruct<int>.NewLeft(1), EitherStruct<int>.NewLeft(0));
-                yield return (EitherStruct<int>.NewRight(0), EitherStruct<int>.NewRight(1));
-                yield return (EitherStruct<int>.NewRight(1), EitherStruct<int>.NewRight(0));
+                yield return (EitherStruct<int>.NewLeft(0), EitherStruct<int>.NewLeft(1));                
+                yield return (EitherStruct<int>.NewRight(0), EitherStruct<int>.NewRight(1));                
             }
         }
 
@@ -53,10 +51,8 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.EqualityFixtures
             get
             {
                 yield return (EitherStruct<string>.NewLeft(""), EitherStruct<string>.NewRight(""));
-                yield return (EitherStruct<string>.NewLeft(""), EitherStruct<string>.NewLeft("a"));
-                yield return (EitherStruct<string>.NewLeft("a"), EitherStruct<string>.NewLeft(""));
-                yield return (EitherStruct<string>.NewRight(""), EitherStruct<string>.NewRight("a"));
-                yield return (EitherStruct<string>.NewRight("a"), EitherStruct<string>.NewRight(""));
+                yield return (EitherStruct<string>.NewLeft(""), EitherStruct<string>.NewLeft("a"));                
+                yield return (EitherStruct<string>.NewRight(""), EitherStruct<string>.NewRight("a"));                
             }
         }
 
