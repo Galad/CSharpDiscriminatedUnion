@@ -26,7 +26,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
                     BinaryExpression(
                         SyntaxKind.IsExpression,
                         IdentifierName("obj"),
-                        IdentifierName(context.Name)
+                        context.Type
                     ),
                     InvocationExpression(
                         IdentifierName("Equals"),

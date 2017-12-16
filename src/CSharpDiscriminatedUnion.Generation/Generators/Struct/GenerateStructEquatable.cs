@@ -25,41 +25,36 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
 
         private IEnumerable<StatementSyntax> GenerateEquatableBlock(DiscriminatedUnionContext<StructDiscriminatedUnionCase> context)
         {
-            yield return SwitchStatement(
-                MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    ThisExpression(),
-                    IdentifierName(Identifier("_tag"))
-                )                
-            )
-            .WithSections(List(GenerateSwitchSections(context)));
+            if (!context.IsSingleCase)
+            {
+                yield return SwitchStatement(
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        ThisExpression(),
+                        IdentifierName(Identifier(GeneratorHelpers.TagFieldName))
+                    )
+                )
+                .WithSections(List(GenerateSwitchSections(context)));
+            }
+            else if (context.Cases.IsEmpty)
+            {
+                yield return ReturnStatement(GeneratorHelpers.TrueExpression());
+            }
+            else
+            {
+                yield return GenerateReturnStatementForSingleCase(context.Cases[0]);
+            }
         }
 
         private IEnumerable<SwitchSectionSyntax> GenerateSwitchSections(DiscriminatedUnionContext<StructDiscriminatedUnionCase> context)
         {
-            return context.Cases.Select(@case =>
+            return context.Cases.Select((Func<StructDiscriminatedUnionCase, SwitchSectionSyntax>)(@case =>
                 SwitchSection(
                     SingletonList<SwitchLabelSyntax>(CaseSwitchLabel(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(@case.CaseNumber)))),
                     SingletonList<StatementSyntax>(
-                        ReturnStatement(                           
-                            GenerateCasesBinaryExpression(
-                                    @case,
-                                    BinaryExpression(
-                                    SyntaxKind.EqualsExpression,
-                                    MemberAccessExpression(
-                                        SyntaxKind.SimpleMemberAccessExpression,
-                                        IdentifierName(Identifier("value")),
-                                        IdentifierName(Identifier("_tag"))
-                                    ),
-                                    LiteralExpression(
-                                        SyntaxKind.NumericLiteralExpression,
-                                        Literal(@case.CaseNumber)
-                                    )
-                                )
-                            )                           
-                        )
+                        GenerateReturnStatement(@case)
                     )
-                )                
+                ))
             )
             .Concat(new[]{
                 SwitchSection().WithLabels(
@@ -94,33 +89,103 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             });
         }
 
-        private BinaryExpressionSyntax GenerateCasesBinaryExpression(
+        private ReturnStatementSyntax GenerateReturnStatement(StructDiscriminatedUnionCase @case)
+        {
+            return ReturnStatement(
+                        GenerateCasesBinaryExpression(
+                                @case,
+                                BinaryExpression(
+                                    SyntaxKind.EqualsExpression,
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        IdentifierName(Identifier("value")),
+                                        IdentifierName(Identifier(GeneratorHelpers.TagFieldName))
+                                    ),
+                                    LiteralExpression(
+                                        SyntaxKind.NumericLiteralExpression,
+                                        Literal(@case.CaseNumber)
+                                    )
+                                )
+                            )
+                        );
+        }
+
+        private ReturnStatementSyntax GenerateReturnStatementForSingleCase(StructDiscriminatedUnionCase @case)
+        {
+            if (@case.CaseValues.IsEmpty)
+            {
+                return ReturnStatement(GeneratorHelpers.TrueExpression());
+            }            
+            return ReturnStatement(GenerateCasesBinaryExpression(@case, GenerateCaseValueEqual(@case, 0), 1));
+        }
+
+        private ExpressionSyntax GenerateCasesBinaryExpression(
             StructDiscriminatedUnionCase @case,
-            BinaryExpressionSyntax binaryExpressionSyntax,
+            ExpressionSyntax binaryExpressionSyntax,
             int caseValueIndex = 0)
         {
-            if(@case.CaseValues.Length <= caseValueIndex)
+            if (@case.CaseValues.Length <= caseValueIndex)
             {
                 return binaryExpressionSyntax;
             }
+
             var andExpression = BinaryExpression(
                 SyntaxKind.LogicalAndExpression,
                 binaryExpressionSyntax,
-                BinaryExpression(
-                    SyntaxKind.EqualsExpression,
-                    MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        ThisExpression(),
-                        IdentifierName(@case.CaseValues[caseValueIndex].Name)
-                    ),
-                    MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        IdentifierName("value"),
-                        IdentifierName(@case.CaseValues[caseValueIndex].Name)
-                    )
-                )
+                 GenerateCaseValueEqual(@case, caseValueIndex)
             );
             return GenerateCasesBinaryExpression(@case, andExpression, caseValueIndex + 1);
+        }
+
+        private static InvocationExpressionSyntax GenerateCaseValueEqual(StructDiscriminatedUnionCase @case, int caseValueIndex)
+        {
+            return InvocationExpression(
+                               MemberAccessExpression(
+                                   SyntaxKind.SimpleMemberAccessExpression,
+                                   MemberAccessExpression(
+                                       SyntaxKind.SimpleMemberAccessExpression,
+                                       QualifiedName(
+                                           QualifiedName(
+                                               QualifiedName(
+                                                   IdentifierName("System"),
+                                                   IdentifierName("Collections")
+                                                ),
+                                               IdentifierName("Generic")
+                                            ),
+                                            GenericName(Identifier("EqualityComparer"))
+                                            .WithTypeArgumentList(
+                                                TypeArgumentList(
+                                                    SingletonSeparatedList<TypeSyntax>(@case.CaseValues[caseValueIndex].Type)
+                                                )
+                                            )
+                                        ),
+                                       IdentifierName("Default")
+                                    ),
+                                    IdentifierName("Equals")
+                               )
+                            ).WithArgumentList(
+                                ArgumentList(
+                                    SeparatedList<ArgumentSyntax>(
+                                        new SyntaxNodeOrToken[]{
+                                Argument(
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        ThisExpression(),
+                                        IdentifierName(@case.CaseValues[caseValueIndex].Name)
+                                    )
+                                ),
+                                Token(SyntaxKind.CommaToken),
+                                Argument(
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        IdentifierName("value"),
+                                        IdentifierName(@case.CaseValues[caseValueIndex].Name)
+                                    )
+                                )
+                                        }
+                                    )
+                                )
+                            );
         }
     }
 }

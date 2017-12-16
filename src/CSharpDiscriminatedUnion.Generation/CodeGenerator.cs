@@ -23,6 +23,7 @@ namespace CSharpDiscriminatedUnion.Generation
 
         public CodeGenerator(AttributeData attributeData)
         {
+            //Debugger.Launch();
             Requires.NotNull(attributeData, nameof(attributeData));
             var arguments = attributeData.NamedArguments.ToImmutableDictionary(kvp => kvp.Key, k => k.Value.Value);
             T GetAttributeValue<T>(string name, T defaultValue, T nullValue)
@@ -54,7 +55,7 @@ namespace CSharpDiscriminatedUnion.Generation
             if (applyToStructSymbolInfo == null)
             {
                 throw new InvalidOperationException($"applyTo symbol has not been found");
-            }
+            }            
             var applyToStructType = GetTypeSyntax(applyToStruct, applyToStructSymbolInfo);
             var structCases = GetStructCases(applyToStruct, semanticModel);
             var partialStruct = GetPartialStruct(applyToStruct, applyToStructType);
@@ -245,25 +246,45 @@ namespace CSharpDiscriminatedUnion.Generation
             StructDeclarationSyntax applyTo,
             SemanticModel semanticModel)
         {
-            //if(applyTo.Identifier.Text == "StructBook")
-            //{
-            //    Debugger.Break();
-            //}
             var caseAttributeType = semanticModel.Compilation.GetTypeByMetadataName(typeof(StructCaseAttribute).FullName);
-            var casesClass = applyTo.ChildNodes()
-                                    .OfType<ClassDeclarationSyntax>()
-                                    .SingleOrDefault(c => c.Identifier.ValueText == "Cases");
-            if (casesClass != null)
+            IEnumerable<StructDiscriminatedUnionCase> getCasesFromPartialClass()
             {
+                var casesClass = applyTo.ChildNodes()
+                                        .OfType<ClassDeclarationSyntax>()
+                                        .SingleOrDefault(c => c.Identifier.ValueText == "Cases");
+                if (casesClass == null)
+                {
+                    return Enumerable.Empty<StructDiscriminatedUnionCase>();
+                }
                 var symbol = semanticModel.GetDeclaredSymbol(casesClass);
                 //singleton cases
-                var singletonCases = symbol.GetAttributes()
-                                           .OrderByDescending(a => (bool)a.ConstructorArguments[1].Value)
-                                           .Select(a => (string)a.ConstructorArguments[0].Value)
-                                           .Select((c, i) => new StructDiscriminatedUnionCase(Identifier(c), ImmutableArray<CaseValue>.Empty, i));
-
-                return singletonCases.ToImmutableArray();
+                return symbol.GetAttributes()
+                                           .OrderByDescending(a => (bool)a.ConstructorArguments[1].Value)                                           
+                                           .Select((a, i) =>
+                                           {
+                                               var caseName = (string)a.ConstructorArguments[0].Value;
+                                               return new StructDiscriminatedUnionCase(
+                                                   Identifier(caseName), 
+                                                   ImmutableArray<CaseValue>.Empty, 
+                                                   i);
+                                           });
             }
+
+            IEnumerable<StructDiscriminatedUnionCase> getCasesFromFields()
+            {
+                return applyTo.ChildNodes()
+                              .OfType<FieldDeclarationSyntax>()
+                              .Select(f =>
+                              {
+                                  var symbol = semanticModel.GetDeclaredSymbol(f.Declaration.Variables.Single()) as IFieldSymbol;
+                                  var attribute = symbol.GetAttributes().Where(a => a.AttributeClass == caseAttributeType).Single();
+                                  var name = (string)attribute.ConstructorArguments[0].Value;
+                                  return (declaration: f, symbol, name);
+                              })
+                              .GroupBy(f => f.name)
+                              .Select((g, i) => getCase(i, g.Key, g.Select(f => (f.declaration, f.symbol))));
+            }
+
             StructDiscriminatedUnionCase getCase(int caseNumber, string caseName, IEnumerable<(FieldDeclarationSyntax, IFieldSymbol)> symbols)
             {
                 return new StructDiscriminatedUnionCase(
@@ -272,19 +293,10 @@ namespace CSharpDiscriminatedUnion.Generation
                     caseNumber
                 );
             }
-            var casesField = applyTo.ChildNodes()
-                                     .OfType<FieldDeclarationSyntax>()
-                                     .Select(f =>
-                                     {
-                                         var symbol = semanticModel.GetDeclaredSymbol(f.Declaration.Variables.Single()) as IFieldSymbol;
-                                         var attribute = symbol.GetAttributes().Where(a => a.AttributeClass == caseAttributeType).Single();
-                                         var name = (string)attribute.ConstructorArguments[0].Value;
-                                         return (declaration: f, symbol, name);
-                                     })                                     
-                                     .GroupBy(f => f.name)
-                                     .Select((g, i) => getCase(i, g.Key, g.Select(f => (f.declaration, f.symbol))))
-                                     .ToImmutableArray();
-            return casesField;
+            return getCasesFromPartialClass()
+                        .Concat(getCasesFromFields())
+                        .Select((c, i) => new StructDiscriminatedUnionCase(c.Name, c.CaseValues, i))
+                        .ToImmutableArray();
         }
 
         private ClassDeclarationSyntax CreateEmptyCasesPartialClass()

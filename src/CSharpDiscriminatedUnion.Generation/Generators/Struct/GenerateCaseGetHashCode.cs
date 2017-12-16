@@ -21,17 +21,27 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
         {
             yield return DeclarePrimeConstant();
             yield return DeclareHashCodeVariable();
-            var tag = MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    ThisExpression(),
-                    IdentifierName("_tag")
-                );
-            yield return GenerateHashCodeForFieldValue(tag);
-            var switchCases = context.Cases.Select(c => GetSwitchCase(c));
-            yield return SwitchStatement(tag)
-                .WithSections(
-                    List(switchCases)
-                );
+            if (!context.IsSingleCase)
+            {
+                var tag = MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        ThisExpression(),
+                        IdentifierName(GeneratorHelpers.TagFieldName)
+                    );
+                yield return GenerateHashCodeForFieldValue(tag);
+                var switchCases = context.Cases.Select(c => GetSwitchCase(c));
+                yield return SwitchStatement(tag)
+                    .WithSections(
+                        List(switchCases)
+                    );
+            }
+            else
+            {
+                foreach(var s in context.Cases[0].CaseValues.Select(c => GenerateHashCodeForFieldValue(HashCodeForCaseValue(c))))
+                {
+                    yield return s;
+                }
+            }
             yield return ReturnStatement(IdentifierName(Identifier(HashCodeVariable)));
         }
 

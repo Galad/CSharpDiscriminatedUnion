@@ -67,7 +67,8 @@ namespace CSharpDiscriminatedUnion.Generation
         public ImmutableArray<T> Cases { get; }
         public ImmutableArray<MemberDeclarationSyntax> Members { get; }
         public TypeDeclarationSyntax GeneratedPartialClass { get; }
-
+        public bool IsSingleCase => Cases.Length <= 1;
+        
         private readonly ReadonlyContext _readonlyContext;
 
         public DiscriminatedUnionContext(

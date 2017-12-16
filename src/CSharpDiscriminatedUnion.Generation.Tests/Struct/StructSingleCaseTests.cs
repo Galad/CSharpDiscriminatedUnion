@@ -11,7 +11,8 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.Struct
 {
     public class StructSingleCaseTests
     {
-        public void HasCaseSingletonValue(string expected)
+        [Test]
+        public void HasCaseSingletonValue()
         {
             var caseFields = typeof(UnitStruct).GetFields(BindingFlags.Public | BindingFlags.Static)
                                                    .Where(f => f.IsInitOnly)
