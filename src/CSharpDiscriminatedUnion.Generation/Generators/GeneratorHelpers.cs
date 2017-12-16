@@ -13,6 +13,8 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
 {
     internal static partial class GeneratorHelpers
     {
+        public const string TagFieldName = "_tag";
+
         public static MethodDeclarationSyntax CreateMatchMethod(ImmutableArray<DiscriminatedUnionCase> cases, SyntaxToken generateParameterName)
         {
             var match =

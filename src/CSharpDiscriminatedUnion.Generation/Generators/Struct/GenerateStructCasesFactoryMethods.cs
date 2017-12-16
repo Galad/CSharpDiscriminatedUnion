@@ -20,11 +20,13 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             StructDiscriminatedUnionCase @case)
         {
             var defaultArguments = context.Cases.SelectMany(c => c.CaseValues.Select(cc => Argument(DefaultExpression(cc.Type))));
+            var tagArgument = context.IsSingleCase ? Enumerable.Empty<ArgumentSyntax>()
+                                                   : new[] { CreateTagArgument(@case) };
             return ObjectCreationExpression(context.Type)
                     .WithArgumentList(
                         ArgumentList(
                             SeparatedList(
-                                new[] { CreateTagArgument(@case) }.Concat(defaultArguments)
+                                tagArgument.Concat(defaultArguments)
                             )
                         )
                     );
@@ -44,11 +46,13 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             DiscriminatedUnionContext<StructDiscriminatedUnionCase> context,
             StructDiscriminatedUnionCase @case)
         {
+            var tagArgument = context.IsSingleCase ? Enumerable.Empty<ArgumentSyntax>()
+                                                   : new[] { CreateTagArgument(@case) };
             return ObjectCreationExpression(context.Type)
                     .WithArgumentList(
                         ArgumentList(
                             SeparatedList(
-                                (new[] { CreateTagArgument(@case) }).Concat(
+                                tagArgument.Concat(
                                     context.Cases.SelectMany(c => GenerateArgumentsForCase(c, @case))
                                 )
                             )

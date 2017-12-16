@@ -36,7 +36,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.Struct
         [TestCase(0, "")]
         [TestCase("", 0)]
         [TestCase("", "")]
-        public void EitherStruct_HasFactoryMethod<TLeft, TRight>(TLeft dummyLeft, TRight dummyRight)
+        public void EitherStruct2_HasFactoryMethod<TLeft, TRight>(TLeft dummyLeft, TRight dummyRight)
         {
             var factoryMethods = typeof(EitherStruct2<TLeft, TRight>).GetMethods(BindingFlags.Public | BindingFlags.Static)
                                                        .Where(m => m.Name.StartsWith("New"));

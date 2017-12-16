@@ -11,13 +11,18 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
     {
         public DiscriminatedUnionContext<StructDiscriminatedUnionCase> Build(DiscriminatedUnionContext<StructDiscriminatedUnionCase> context)
         {            
+            if(context.IsSingleCase && context.Cases[0].CaseValues.IsEmpty)
+            {
+                // prevent generating an parameterless constructor
+                return context;
+            }
+            var tag = context.IsSingleCase ? Enumerable.Empty<ParameterSyntax>()
+                                           : new [] { Parameter(Identifier("tag")).WithType(PredefinedType(Token(SyntaxKind.ByteKeyword))) };
             var constructor = ConstructorDeclaration(context.UserDefinedClass.Identifier)
                        .AddModifiers(Token(SyntaxKind.PrivateKeyword))
                        .WithParameterList(
                             ParameterList(                                
-                                SeparatedList(
-                                    new[] { Parameter(Identifier("tag")).WithType(PredefinedType(Token(SyntaxKind.ByteKeyword))) }                                    
-                                    .Concat(GetValueParameters(context))
+                                SeparatedList(tag.Concat(GetValueParameters(context))
                                 )
                             )
                         )
@@ -36,13 +41,16 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
 
         private IEnumerable<StatementSyntax> GenerateConstructorBody(DiscriminatedUnionContext<StructDiscriminatedUnionCase> context)
         {
-            yield return ExpressionStatement(
-                                AssignmentExpression(
-                                    SyntaxKind.SimpleAssignmentExpression,
-                                    IdentifierName("_tag"),
-                                    IdentifierName("tag")
-                                )
-                            );
+            if (!context.IsSingleCase)
+            {
+                yield return ExpressionStatement(
+                                    AssignmentExpression(
+                                        SyntaxKind.SimpleAssignmentExpression,
+                                        IdentifierName(GeneratorHelpers.TagFieldName),
+                                        IdentifierName("tag")
+                                    )
+                                );
+            }
             var valueAssignments = context.Cases.SelectMany(
                 @case => @case.CaseValues.Select(
                     @caseValue => ExpressionStatement(

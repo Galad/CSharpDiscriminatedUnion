@@ -13,6 +13,11 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
 
         public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)
         {
+            if(context.Cases.Length <= 1)
+            {
+                //we don't need a tag if there is zero or one case
+                return context;
+            }
             return context.AddMember(TagField);
         }
 
@@ -21,7 +26,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             return FieldDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind.ByteKeyword)))
                                 .WithVariables(
                                     SingletonSeparatedList(
-                                        VariableDeclarator(Identifier("_tag"))
+                                        VariableDeclarator(Identifier(GeneratorHelpers.TagFieldName))
                                     )
                                 ))
                                 .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword)));
