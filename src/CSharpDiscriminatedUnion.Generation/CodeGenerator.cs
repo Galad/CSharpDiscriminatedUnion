@@ -34,9 +34,14 @@ namespace CSharpDiscriminatedUnion.Generation
             _preventNullValues = GetAttributeValue(nameof(GenerateDiscriminatedUnionAttribute.PreventNullValues), false, false);
         }
 
-        public Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(MemberDeclarationSyntax applyTo, CSharpCompilation compilation, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
-        {
-            var semanticModel = compilation.GetSemanticModel(applyTo.SyntaxTree);
+        public Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(
+            TransformationContext context,
+            IProgress<Diagnostic> progress, 
+            CancellationToken cancellationToken)
+        {            
+            var compilation = context.Compilation;
+            var applyTo = context.ProcessingNode as MemberDeclarationSyntax;
+            var semanticModel = context.SemanticModel;            
             if (applyTo is ClassDeclarationSyntax applyToClass)
             {
                 return GenerateForClass(applyTo, semanticModel, applyToClass);
