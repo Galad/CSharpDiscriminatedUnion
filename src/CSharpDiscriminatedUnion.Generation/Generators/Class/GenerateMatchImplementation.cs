@@ -30,7 +30,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
             DiscriminatedUnionContext<DiscriminatedUnionCase> context,
             DiscriminatedUnionCase currentCase)
         {
-            var match = GeneratorHelpers.CreateMatchMethod(context.Cases, context.MatchGenericParameter)
+            var match = GeneratorHelpers.CreateMatchMethod(context.Cases.Cast<IDiscriminatedUnionCase>(), context.MatchGenericParameter)
                              .WithModifiers(
                                 TokenList(
                                     Token(SyntaxKind.PublicKeyword),
@@ -45,32 +45,10 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
             ImmutableArray<DiscriminatedUnionCase> cases,
             DiscriminatedUnionCase currentCase)
         {
-            StatementSyntax getReturnStatement()
-            {
-                return ReturnStatement(
-                     InvocationExpression(
-                         IdentifierName("match" + currentCase.Name)
-                     )
-                     .WithArgumentList(
-                         ArgumentList(
-                             SeparatedList(
-                                currentCase.CaseValues.Select(v =>
-                                     Argument(
-                                         MemberAccessExpression(
-                                             SyntaxKind.SimpleMemberAccessExpression,
-                                             ThisExpression(),
-                                             IdentifierName(v.Name)
-                                         )
-                                     )
-                                 )
-                             )
-                         )
-                     )
-                 );
-            };
+            
             return Block(
                 cases.Select(c => GeneratorHelpers.CreateGuardForNull(IdentifierName("match" + c.Name.Text)))
-                .Concat(new[] { getReturnStatement() })
+                .Concat(new[] { GeneratorHelpers.GenerateMatchReturnStatement(currentCase) })
                 );
         }
     }

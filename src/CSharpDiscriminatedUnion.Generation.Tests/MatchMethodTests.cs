@@ -21,7 +21,6 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
                     .Assembly
                     .GetTypes()
                     .Where(t => t.IsPublic &&
-                                //!t.IsGenericType &&
                                 t != typeof(NoCaseUnion) &&
                                 t != typeof(NoCaseUnionGeneric<>) &&
                                 t != typeof(NoCaseUnionGeneric<,>) &&
@@ -45,7 +44,6 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
             TestMatchMethod(type);
         }
 
-        [Ignore("Not implemented")]
         [TestCaseSource(nameof(MatchMethodCasesStruct))]
         public void TestMatchMethod_Struct(Type type)
         {

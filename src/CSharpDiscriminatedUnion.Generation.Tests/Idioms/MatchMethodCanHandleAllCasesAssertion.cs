@@ -169,14 +169,15 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.Idioms
                                                     new FieldInfo[] { }
                                                     )
                                                 );
-            var fieldInfoCases = caseClass.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
-                                          .Select(f => (f.GetCustomAttributesData()
-                                                        .Single(d => d.AttributeType == (typeof(StructCaseAttribute)))
-                                                        .ConstructorArguments[0].Value.ToString(),
-                                                        f)
-                                                 )
-                                          .GroupBy(f => f.Item1)
-                                          .Select(g => new UnionCase(g.Key, g.Select(gg => gg.f).ToArray()));
+            var fieldInfoCases = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
+                                     .Where(f => f.Name != "_tag")
+                                     .Select(f => (f.GetCustomAttributesData()
+                                                   .Single(d => d.AttributeType == (typeof(StructCaseAttribute)))
+                                                   .ConstructorArguments[0].Value.ToString(),
+                                                   f)
+                                            )
+                                     .GroupBy(f => f.Item1)
+                                     .Select(g => new UnionCase(g.Key, g.Select(gg => gg.f).ToArray()));
             return valuelessCases.Concat(fieldInfoCases);
         }
 

@@ -27,14 +27,9 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
         {
             if (!context.IsSingleCase)
             {
-                yield return SwitchStatement(
-                    MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        ThisExpression(),
-                        IdentifierName(Identifier(GeneratorHelpers.TagFieldName))
-                    )
-                )
-                .WithSections(List(GenerateSwitchSections(context)));
+                yield return GeneratorHelpers.GenerateStructMatchingSwitchStatement(
+                    context.Cases.Cast<IDiscriminatedUnionCase>(),
+                    GenerateReturnStatement);
             }
             else if (context.Cases.IsEmpty)
             {
@@ -46,50 +41,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             }
         }
 
-        private IEnumerable<SwitchSectionSyntax> GenerateSwitchSections(DiscriminatedUnionContext<StructDiscriminatedUnionCase> context)
-        {
-            return context.Cases.Select((Func<StructDiscriminatedUnionCase, SwitchSectionSyntax>)(@case =>
-                SwitchSection(
-                    SingletonList<SwitchLabelSyntax>(CaseSwitchLabel(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(@case.CaseNumber)))),
-                    SingletonList<StatementSyntax>(
-                        GenerateReturnStatement(@case)
-                    )
-                ))
-            )
-            .Concat(new[]{
-                SwitchSection().WithLabels(
-                    SingletonList<SwitchLabelSyntax>(
-                        DefaultSwitchLabel()
-                    )
-                )
-                .WithStatements(
-                    SingletonList<StatementSyntax>(
-                        ThrowStatement(
-                            ObjectCreationExpression(
-                                QualifiedName(
-                                    IdentifierName("System"),
-                                    IdentifierName("ArgumentOutOfRangeException")
-                                )
-                            )
-                            .WithArgumentList(
-                                ArgumentList(
-                                    SingletonSeparatedList(
-                                        Argument(
-                                            LiteralExpression(
-                                                SyntaxKind.StringLiteralExpression,
-                                                Literal("The given value does not represent a known case")
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            });
-        }
-
-        private ReturnStatementSyntax GenerateReturnStatement(StructDiscriminatedUnionCase @case)
+        private ReturnStatementSyntax GenerateReturnStatement(IDiscriminatedUnionCase @case)
         {
             return ReturnStatement(
                         GenerateCasesBinaryExpression(
@@ -110,17 +62,17 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
                         );
         }
 
-        private ReturnStatementSyntax GenerateReturnStatementForSingleCase(StructDiscriminatedUnionCase @case)
+        private ReturnStatementSyntax GenerateReturnStatementForSingleCase(IDiscriminatedUnionCase @case)
         {
             if (@case.CaseValues.IsEmpty)
             {
                 return ReturnStatement(GeneratorHelpers.TrueExpression());
-            }            
+            }
             return ReturnStatement(GenerateCasesBinaryExpression(@case, GenerateCaseValueEqual(@case, 0), 1));
         }
 
         private ExpressionSyntax GenerateCasesBinaryExpression(
-            StructDiscriminatedUnionCase @case,
+            IDiscriminatedUnionCase @case,
             ExpressionSyntax binaryExpressionSyntax,
             int caseValueIndex = 0)
         {
@@ -137,7 +89,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             return GenerateCasesBinaryExpression(@case, andExpression, caseValueIndex + 1);
         }
 
-        private static InvocationExpressionSyntax GenerateCaseValueEqual(StructDiscriminatedUnionCase @case, int caseValueIndex)
+        private static InvocationExpressionSyntax GenerateCaseValueEqual(IDiscriminatedUnionCase @case, int caseValueIndex)
         {
             return InvocationExpression(
                                MemberAccessExpression(

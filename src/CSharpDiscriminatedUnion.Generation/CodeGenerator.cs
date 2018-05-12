@@ -1,18 +1,16 @@
 ﻿using CodeGeneration.Roslyn;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CSharpDiscriminatedUnion.Attributes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Threading;
-using Validation;
-using System.Diagnostics;
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
-using CSharpDiscriminatedUnion.Attributes;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Validation;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
@@ -36,12 +34,12 @@ namespace CSharpDiscriminatedUnion.Generation
 
         public Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(
             TransformationContext context,
-            IProgress<Diagnostic> progress, 
+            IProgress<Diagnostic> progress,
             CancellationToken cancellationToken)
-        {            
+        {
             var compilation = context.Compilation;
             var applyTo = context.ProcessingNode as MemberDeclarationSyntax;
-            var semanticModel = context.SemanticModel;            
+            var semanticModel = context.SemanticModel;
             if (applyTo is ClassDeclarationSyntax applyToClass)
             {
                 return GenerateForClass(applyTo, semanticModel, applyToClass);
@@ -60,7 +58,7 @@ namespace CSharpDiscriminatedUnion.Generation
             if (applyToStructSymbolInfo == null)
             {
                 throw new InvalidOperationException($"applyTo symbol has not been found");
-            }            
+            }
             var applyToStructType = GetTypeSyntax(applyToStruct, applyToStructSymbolInfo);
             var structCases = GetStructCases(applyToStruct, semanticModel);
             var partialStruct = GetPartialStruct(applyToStruct, applyToStructType);
@@ -264,13 +262,13 @@ namespace CSharpDiscriminatedUnion.Generation
                 var symbol = semanticModel.GetDeclaredSymbol(casesClass);
                 //singleton cases
                 return symbol.GetAttributes()
-                                           .OrderByDescending(a => (bool)a.ConstructorArguments[1].Value)                                           
+                                           .OrderByDescending(a => (bool)a.ConstructorArguments[1].Value)
                                            .Select((a, i) =>
                                            {
                                                var caseName = (string)a.ConstructorArguments[0].Value;
                                                return new StructDiscriminatedUnionCase(
-                                                   Identifier(caseName), 
-                                                   ImmutableArray<CaseValue>.Empty, 
+                                                   Identifier(caseName),
+                                                   ImmutableArray<CaseValue>.Empty,
                                                    i);
                                            });
             }
