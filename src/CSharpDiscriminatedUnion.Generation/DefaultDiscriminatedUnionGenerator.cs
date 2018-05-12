@@ -21,7 +21,8 @@ namespace CSharpDiscriminatedUnion.Generation
                   new GenerateBaseEqualsOperatorOverload<DiscriminatedUnionCase>(),
                   new GenerateCaseGetHashCode(),
                   new AddGeneratedCodeAttribute<DiscriminatedUnionCase>("DiscriminitedUnion", "1.0"),
-                  new GenerateBaseGetHashCodeImplementation<DiscriminatedUnionCase>()
+                  new GenerateBaseGetHashCodeImplementation<DiscriminatedUnionCase>(),
+                  new GenerateDebugView<DiscriminatedUnionCase>()
                   )
         {
         }

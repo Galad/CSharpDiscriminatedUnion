@@ -13,6 +13,10 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     {
         public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)
         {
+            if (context.Cases.IsEmpty)
+            {
+                return context;
+            }
             return context.AddMember(GenerateDebugViewProperty(context));
         }
 
@@ -108,9 +112,33 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
 
         private static IEnumerable<InterpolatedStringContentSyntax> GenerateInterpolatedStrings(T @case)
         {
-            return @case.CaseValues
+            if (@case.CaseValues.IsEmpty)
+            {
+                return Enumerable.Empty<InterpolatedStringContentSyntax>();
+            }
+            var interpolatedStrings = @case.CaseValues
                 .Select(c => c.SymbolInfo.IsReferenceType ? c.Name.Text + "String" : c.Name.Text)
-                .Select(s => Interpolation(IdentifierName(s)));
+                .Select(s => (InterpolatedStringContentSyntax)Interpolation(IdentifierName(s)));
+            if(@case.CaseValues.Length == 1)
+            {
+                return interpolatedStrings;
+            }
+            var interpolatedStringsAndSeparator =
+                interpolatedStrings.Skip(1)
+                                   .SelectMany(s => new[] {
+                                       InterpolatedStringText()
+                                            .WithTextToken(
+                                                Token(
+                                                    TriviaList(),
+                                                    SyntaxKind.InterpolatedStringTextToken,
+                                                    ", ",
+                                                    ", ",
+                                                    TriviaList()
+                                                )
+                                            ),
+                                       s});
+            return interpolatedStrings.Take(1)
+                                      .Concat(interpolatedStringsAndSeparator);
         }
 
         private static StatementSyntax GenerateReferenceTypeToStringStatement(CaseValue c)
@@ -142,7 +170,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                                     InvocationExpression(
                                         MemberAccessExpression(
                                             SyntaxKind.SimpleMemberAccessExpression,
-                                            IdentifierName("variableName"),
+                                            IdentifierName(c.Name),
                                             IdentifierName("ToString")
                                         )
                                     )

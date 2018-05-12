@@ -18,7 +18,8 @@ namespace CSharpDiscriminatedUnion.Generation
                   new GenerateBaseEqualsOperatorOverload<StructDiscriminatedUnionCase>(),
                   new GenerateStructEqualsOverride(),
                   new GenerateStructGetHashCode(),
-                  new GenerateStructMatchMethod()
+                  new GenerateStructMatchMethod(),
+                  new GenerateDebugView<StructDiscriminatedUnionCase>()
                   )
         {            
         }
