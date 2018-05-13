@@ -9,6 +9,7 @@ namespace CSharpDiscriminatedUnion.Generation
             string factoryPrefix,
             bool preventNull)
             : base(
+                  new ApplyGenericArguments<StructDiscriminatedUnionCase>(),
                   new GenerateStructCases(),
                   new GenerateTagField<StructDiscriminatedUnionCase>(),
                   new GenerateStructConstructor(),
@@ -16,7 +17,9 @@ namespace CSharpDiscriminatedUnion.Generation
                   new GenerateStructEquatable(),
                   new GenerateBaseEqualsOperatorOverload<StructDiscriminatedUnionCase>(),
                   new GenerateStructEqualsOverride(),
-                  new GenerateStructGetHashCode()
+                  new GenerateStructGetHashCode(),
+                  new GenerateStructMatchMethod(),
+                  new GenerateDebugView<StructDiscriminatedUnionCase>()
                   )
         {            
         }

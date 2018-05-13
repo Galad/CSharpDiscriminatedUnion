@@ -14,7 +14,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
     /// Generates the abstract Match method
     /// </summary>
     internal class GenerateAbstractMatchMethod : IDiscriminatedUnionGenerator<DiscriminatedUnionCase>
-    { 
+    {
         public DiscriminatedUnionContext<DiscriminatedUnionCase> Build(DiscriminatedUnionContext<DiscriminatedUnionCase> context)
         {
             if (context.Cases.IsEmpty)
@@ -25,8 +25,8 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
         }
 
         private static MemberDeclarationSyntax GetAbstractMatchMethod(DiscriminatedUnionContext<DiscriminatedUnionCase> context)
-        {
-            var match =GeneratorHelpers.CreateMatchMethod(context.Cases, context.MatchGenericParameter)
+        {                 
+            var match = GeneratorHelpers.CreateMatchMethod(context.Cases.Cast<IDiscriminatedUnionCase>(), context.MatchGenericParameter)
                              .WithModifiers(
                                 TokenList(
                                     Token(SyntaxKind.PublicKeyword),
@@ -35,6 +35,6 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
                              )
                              .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
             return match;
-        }        
+        }
     }
 }

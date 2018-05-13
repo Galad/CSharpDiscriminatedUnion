@@ -13,8 +13,10 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
 {
     internal static partial class GeneratorHelpers
     {
-        public static MethodDeclarationSyntax CreateMatchMethod(ImmutableArray<DiscriminatedUnionCase> cases, SyntaxToken generateParameterName)
-        {
+        public const string TagFieldName = "_tag";
+
+        public static MethodDeclarationSyntax CreateMatchMethod(IEnumerable<IDiscriminatedUnionCase> cases, SyntaxToken generateParameterName)
+        {            
             var match =
                 MethodDeclaration(IdentifierName(generateParameterName), "Match")
                              .AddTypeParameterListParameters(TypeParameter(generateParameterName))
@@ -22,7 +24,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             return match;
         }
 
-        private static ParameterSyntax GetCaseMatchFunction(DiscriminatedUnionCase @case, SyntaxToken generateParameterName)
+        private static ParameterSyntax GetCaseMatchFunction(IDiscriminatedUnionCase @case, SyntaxToken generateParameterName)
         {
             return Parameter(
                     Identifier("match" + @case.Name.Text)
@@ -195,5 +197,86 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                     Token(SyntaxKind.OverrideKeyword)
                 )
             );
+
+        public static SwitchStatementSyntax GenerateStructMatchingSwitchStatement(
+            IEnumerable<IDiscriminatedUnionCase> cases,
+            Func<IDiscriminatedUnionCase, ReturnStatementSyntax> generateReturnStatement)
+        {
+            IEnumerable<SwitchSectionSyntax> generateStructMatchingImplementation()
+            {
+                return cases.Select(@case =>
+                    SwitchSection(
+                        SingletonList<SwitchLabelSyntax>(CaseSwitchLabel(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(@case.CaseNumber)))),
+                        SingletonList<StatementSyntax>(
+                            generateReturnStatement(@case)
+                        )
+                    )
+                )
+                .Concat(new[]{
+                SwitchSection().WithLabels(
+                    SingletonList<SwitchLabelSyntax>(
+                        DefaultSwitchLabel()
+                    )
+                )
+                .WithStatements(
+                    SingletonList<StatementSyntax>(
+                        ThrowStatement(
+                            ObjectCreationExpression(
+                                QualifiedName(
+                                    IdentifierName("System"),
+                                    IdentifierName("ArgumentOutOfRangeException")
+                                )
+                            )
+                            .WithArgumentList(
+                                ArgumentList(
+                                    SingletonSeparatedList(
+                                        Argument(
+                                            LiteralExpression(
+                                                SyntaxKind.StringLiteralExpression,
+                                                Literal("The given value does not represent a known case")
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+                });
+            }
+            
+            return SwitchStatement(
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        ThisExpression(),
+                        IdentifierName(Identifier(GeneratorHelpers.TagFieldName))
+                    )
+                )
+                .WithSections(List(generateStructMatchingImplementation()));
+        }
+
+        public static ReturnStatementSyntax GenerateMatchReturnStatement(IDiscriminatedUnionCase currentCase)
+        {
+            return ReturnStatement(
+                 InvocationExpression(
+                     IdentifierName("match" + currentCase.Name)
+                 )
+                 .WithArgumentList(
+                     ArgumentList(
+                         SeparatedList(
+                            currentCase.CaseValues.Select(v =>
+                                 Argument(
+                                     MemberAccessExpression(
+                                         SyntaxKind.SimpleMemberAccessExpression,
+                                         ThisExpression(),
+                                         IdentifierName(v.Name)
+                                     )
+                                 )
+                             )
+                         )
+                     )
+                 )
+             );
+        }
     }
 }

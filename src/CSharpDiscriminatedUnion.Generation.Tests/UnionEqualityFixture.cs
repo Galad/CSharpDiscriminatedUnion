@@ -8,7 +8,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
 {
     public abstract class UnionEqualityFixture<T>
     {
-        private IEnumerable<TestCaseData> NullTestCase => new[] { new TestCaseData(AnonymousValue, default(T)).Returns(false) };
+        private IEnumerable<TestCaseData> NullTestCase => new[] { new TestCaseData(AnonymousValue, default(T)).Returns(false).SetName<T>() };
         public abstract IEnumerable<Func<T>> SameValues { get; }
         public abstract IEnumerable<(T, T)> DifferentValues { get; }
         public IEnumerable<TestCaseData> EqualityTestCasesSameValues =>
