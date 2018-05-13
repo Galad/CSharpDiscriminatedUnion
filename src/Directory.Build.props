@@ -1,7 +1,6 @@
 <Project>
 
-  <PropertyGroup>
-    <NerdbankGitVersioningVersion>1.6.35</NerdbankGitVersioningVersion>
+  <PropertyGroup>    
     <PackageOutputPath>$(MSBuildThisFileDirectory)..\bin\Packages\$(Configuration)\</PackageOutputPath>
     <PackageLicenseUrl>https://raw.githubusercontent.com/Galad/CSharpDiscriminatedUnion/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Galad/CSharpDiscriminatedUnion</PackageProjectUrl>
@@ -16,7 +15,7 @@
 
   <!-- https://github.com/NuGet/Home/issues/4337 -->
   <ItemGroup>
-    <PackageReference Include="Nerdbank.GitVersioning" Version="$(NerdbankGitVersioningVersion)" PrivateAssets="all" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="2.1.23" PrivateAssets="all" />
   </ItemGroup>
 
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' == 'true' ">
