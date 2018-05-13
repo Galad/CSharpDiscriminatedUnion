@@ -250,30 +250,31 @@ namespace CSharpDiscriminatedUnion.Generation
             SemanticModel semanticModel)
         {
             var caseAttributeType = semanticModel.Compilation.GetTypeByMetadataName(typeof(StructCaseAttribute).FullName);
-            IEnumerable<StructDiscriminatedUnionCase> getCasesFromPartialClass()
+            IEnumerable<(bool, StructDiscriminatedUnionCase)> getCasesFromPartialClass()
             {
                 var casesClass = applyTo.ChildNodes()
                                         .OfType<ClassDeclarationSyntax>()
                                         .SingleOrDefault(c => c.Identifier.ValueText == "Cases");
                 if (casesClass == null)
                 {
-                    return Enumerable.Empty<StructDiscriminatedUnionCase>();
+                    return Enumerable.Empty<(bool, StructDiscriminatedUnionCase)>();
                 }
                 var symbol = semanticModel.GetDeclaredSymbol(casesClass);
                 //singleton cases
                 return symbol.GetAttributes()
-                                           .OrderByDescending(a => (bool)a.ConstructorArguments[1].Value)
-                                           .Select((a, i) =>
-                                           {
-                                               var caseName = (string)a.ConstructorArguments[0].Value;
-                                               return new StructDiscriminatedUnionCase(
-                                                   Identifier(caseName),
-                                                   ImmutableArray<CaseValue>.Empty,
-                                                   i);
-                                           });
+                             .Select((a, i) =>
+                             {
+                                 var isDefault = (bool)a.ConstructorArguments[1].Value;
+                                 var caseName = (string)a.ConstructorArguments[0].Value;
+                                 var @case = new StructDiscriminatedUnionCase(
+                                     Identifier(caseName),
+                                     ImmutableArray<CaseValue>.Empty,
+                                     i);
+                                 return (isDefault, @case);
+                             });
             }
 
-            IEnumerable<StructDiscriminatedUnionCase> getCasesFromFields()
+            IEnumerable<(bool, StructDiscriminatedUnionCase)> getCasesFromFields()
             {
                 return applyTo.ChildNodes()
                               .OfType<FieldDeclarationSyntax>()
@@ -282,22 +283,27 @@ namespace CSharpDiscriminatedUnion.Generation
                                   var symbol = semanticModel.GetDeclaredSymbol(f.Declaration.Variables.Single()) as IFieldSymbol;
                                   var attribute = symbol.GetAttributes().Where(a => a.AttributeClass == caseAttributeType).Single();
                                   var name = (string)attribute.ConstructorArguments[0].Value;
-                                  return (declaration: f, symbol, name);
+                                  var isDefault = (bool)attribute.ConstructorArguments[1].Value;
+                                  return (declaration: f, symbol, name, isDefault);
                               })
                               .GroupBy(f => f.name)
-                              .Select((g, i) => getCase(i, g.Key, g.Select(f => (f.declaration, f.symbol))));
+                              .Select((g, i) => getCase(i, g.Key, g.Select(f => (f.declaration, f.symbol, f.isDefault))));
             }
 
-            StructDiscriminatedUnionCase getCase(int caseNumber, string caseName, IEnumerable<(FieldDeclarationSyntax, IFieldSymbol)> symbols)
+            (bool, StructDiscriminatedUnionCase) getCase(int caseNumber, string caseName, IEnumerable<(FieldDeclarationSyntax, IFieldSymbol, bool)> symbols)
             {
-                return new StructDiscriminatedUnionCase(
+                var isDefault = symbols.Any(s => s.Item3);
+                var @case = new StructDiscriminatedUnionCase(
                     Identifier(caseName),
                     symbols.Select(s => new CaseValue(s.Item1, s.Item2.Type)).ToImmutableArray(),
                     caseNumber
                 );
+                return (isDefault, @case);
             }
             return getCasesFromPartialClass()
                         .Concat(getCasesFromFields())
+                        .OrderByDescending(c => c.Item1)
+                        .Select(c => c.Item2)
                         .Select((c, i) => new StructDiscriminatedUnionCase(c.Name, c.CaseValues, i))
                         .ToImmutableArray();
         }

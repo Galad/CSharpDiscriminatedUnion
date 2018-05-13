@@ -74,8 +74,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.UnionTypes
         {
         }
     }
-
-
+    
     [GenerateDiscriminatedUnion]
     public partial struct TrafficLightsStruct_MultipleDefault
     {

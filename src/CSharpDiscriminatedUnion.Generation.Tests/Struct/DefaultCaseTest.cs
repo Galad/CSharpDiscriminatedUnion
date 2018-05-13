@@ -14,11 +14,19 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.Struct
         {
             get
             {
-                yield return new object[] { default(TrafficLightsStruct), TrafficLightsStruct.Red };
-                yield return new object[] { default(TrafficLightsStruct_DefaultGreen), TrafficLightsStruct_DefaultGreen.Green };
-                yield return new object[] { default(TrafficLightsStruct_DefaultOrange), TrafficLightsStruct_DefaultOrange.Orange };
-                yield return new object[] { default(TrafficLightsStruct_DefaultRed), TrafficLightsStruct_DefaultRed.Red };
-                yield return new object[] { default(TrafficLightsStruct_MultipleDefault), TrafficLightsStruct_MultipleDefault.Green };
+                return new(object, object)[]
+                {
+                    (default(TrafficLightsStruct), TrafficLightsStruct.Red),
+                    (default(TrafficLightsStruct_DefaultGreen), TrafficLightsStruct_DefaultGreen.Green),
+                    (default(TrafficLightsStruct_DefaultOrange), TrafficLightsStruct_DefaultOrange.Orange),
+                    (default(TrafficLightsStruct_DefaultRed), TrafficLightsStruct_DefaultRed.Red),
+                    (default(TrafficLightsStruct_MultipleDefault), TrafficLightsStruct_MultipleDefault.Green),
+                    (default(StructShape), StructShape.Line),
+                    (default(StructShape_DefaultCircle), StructShape_DefaultCircle.NewCircle(default)),
+                    (default(StructShape_DefaultRectangle1), StructShape_DefaultRectangle1.NewRectangle(default, default)),
+                    (default(StructShape_DefaultRectangle2), StructShape_DefaultRectangle2.NewRectangle(default, default))
+                }
+                .Select(t => new object[] { t.Item1, t.Item2 });
             }
         }
 
