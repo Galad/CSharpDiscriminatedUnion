@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators.Class
 {
@@ -14,10 +15,10 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
     {
         public override DiscriminatedUnionContext<DiscriminatedUnionCase> Build(DiscriminatedUnionContext<DiscriminatedUnionCase> context)
         {
-            return context.WithCases(context.Cases.Select(c => c.AddMember(GenerateGetHashCodeMethod(GenerateGetHashCodeBody(c)))).ToImmutableArray());
+            return context.WithCases(context.Cases.Select(c => c.AddMember(GenerateGetHashCodeMethod(GenerateGetHashCodeBody(c, context.SemanticModel)))).ToImmutableArray());
         }
         
-        private IEnumerable<StatementSyntax> GenerateGetHashCodeBody(DiscriminatedUnionCase @case)
+        private IEnumerable<StatementSyntax> GenerateGetHashCodeBody(DiscriminatedUnionCase @case, SemanticModel semanticModel)
         {
             if (@case.CaseValues.Length == 0)
             {
@@ -35,7 +36,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
             );
             foreach (var caseValue in @case.CaseValues)
             {
-                yield return GenerateHashCodeForFieldValue(HashCodeForCaseValue(caseValue));
+                yield return GenerateHashCodeForFieldValue(HashCodeForCaseValue(caseValue, semanticModel));
             }
 
             yield return ReturnStatement(HashCodeVariableIdentifier);

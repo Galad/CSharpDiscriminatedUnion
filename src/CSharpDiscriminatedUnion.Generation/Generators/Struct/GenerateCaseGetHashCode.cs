@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
 {
@@ -29,7 +30,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
                         IdentifierName(GeneratorHelpers.TagFieldName)
                     );
                 yield return GenerateHashCodeForFieldValue(tag);
-                var switchCases = context.Cases.Select(c => GetSwitchCase(c));
+                var switchCases = context.Cases.Select(c => GetSwitchCase(c, context.SemanticModel));
                 yield return SwitchStatement(tag)
                     .WithSections(
                         List(switchCases)
@@ -37,7 +38,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             }
             else
             {
-                foreach(var s in context.Cases[0].CaseValues.Select(c => GenerateHashCodeForFieldValue(HashCodeForCaseValue(c))))
+                foreach(var s in context.Cases[0].CaseValues.Select(c => GenerateHashCodeForFieldValue(HashCodeForCaseValue(c, context.SemanticModel))))
                 {
                     yield return s;
                 }
@@ -45,7 +46,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             yield return ReturnStatement(IdentifierName(Identifier(HashCodeVariable)));
         }
 
-        private SwitchSectionSyntax GetSwitchCase(StructDiscriminatedUnionCase @case)
+        private SwitchSectionSyntax GetSwitchCase(StructDiscriminatedUnionCase @case, SemanticModel semanticModel)
         {
             return SwitchSection()
                 .WithLabels(
@@ -59,7 +60,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
                     )
                 )
                 .WithStatements(
-                    List<StatementSyntax>(@case.CaseValues.Select(c => GenerateHashCodeForFieldValue(HashCodeForCaseValue(c))))
+                    List<StatementSyntax>(@case.CaseValues.Select(c => GenerateHashCodeForFieldValue(HashCodeForCaseValue(c, semanticModel))))
                         .Add(BreakStatement())
                 );
         }

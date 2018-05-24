@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators
 {
@@ -34,7 +35,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                     )
                 );
         }
-      
+
         protected static StatementSyntax GenerateHashCodeForFieldValue(ExpressionSyntax hashCode)
         {
             return ExpressionStatement(
@@ -82,7 +83,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                             )
                         )
                     )
-                );                                    
+                );
         }
 
         protected static StatementSyntax DeclarePrimeConstant()
@@ -116,8 +117,31 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                     );
         }
 
-        protected ExpressionSyntax HashCodeForCaseValue(CaseValue caseValue)
+        protected ExpressionSyntax HashCodeForCaseValue(CaseValue caseValue, SemanticModel semanticModel)
         {
+
+            if (GeneratorHelpers.IsStructuralEquatableType(caseValue, semanticModel))
+            {
+                return InvocationExpression(
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        ParenthesizedExpression(
+                                            CastExpression(
+                                                GeneratorHelpers.StructuralEquatableName,
+                                                IdentifierName(caseValue.Name)
+                                            )
+                                        ),
+                                        IdentifierName("GetHashCode")
+                                    )
+                                )
+                                .WithArgumentList(
+                                    ArgumentList(
+                                        SingletonSeparatedList<ArgumentSyntax>(
+                                            Argument(GeneratorHelpers.StructuralEqualityComparerMemberAccess)
+                                        )
+                                    )
+                                );
+            }
             if (caseValue.SymbolInfo.IsValueType)
             {
                 return InvocationExpression(

@@ -29,7 +29,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             {
                 yield return GeneratorHelpers.GenerateStructMatchingSwitchStatement(
                     context.Cases.Cast<IDiscriminatedUnionCase>(),
-                    GenerateReturnStatement);
+                    d => GenerateReturnStatement(d, context.SemanticModel));
             }
             else if (context.Cases.IsEmpty)
             {
@@ -37,11 +37,11 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             }
             else
             {
-                yield return GenerateReturnStatementForSingleCase(context.Cases[0]);
+                yield return GenerateReturnStatementForSingleCase(context.Cases[0], context.SemanticModel);
             }
         }
 
-        private ReturnStatementSyntax GenerateReturnStatement(IDiscriminatedUnionCase @case)
+        private ReturnStatementSyntax GenerateReturnStatement(IDiscriminatedUnionCase @case, SemanticModel semanticModel)
         {
             return ReturnStatement(
                         GenerateCasesBinaryExpression(
@@ -57,23 +57,25 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
                                         SyntaxKind.NumericLiteralExpression,
                                         Literal(@case.CaseNumber)
                                     )
-                                )
+                                ),
+                                semanticModel
                             )
                         );
         }
 
-        private ReturnStatementSyntax GenerateReturnStatementForSingleCase(IDiscriminatedUnionCase @case)
+        private ReturnStatementSyntax GenerateReturnStatementForSingleCase(IDiscriminatedUnionCase @case, SemanticModel semanticModel)
         {
             if (@case.CaseValues.IsEmpty)
             {
                 return ReturnStatement(GeneratorHelpers.TrueExpression());
             }
-            return ReturnStatement(GenerateCasesBinaryExpression(@case, GenerateCaseValueEqual(@case, 0), 1));
+            return ReturnStatement(GenerateCasesBinaryExpression(@case, GenerateCaseValueEqual(@case, 0, semanticModel), semanticModel, 1));
         }
 
         private ExpressionSyntax GenerateCasesBinaryExpression(
             IDiscriminatedUnionCase @case,
             ExpressionSyntax binaryExpressionSyntax,
+            SemanticModel semanticModel,
             int caseValueIndex = 0)
         {
             if (@case.CaseValues.Length <= caseValueIndex)
@@ -84,60 +86,158 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Struct
             var andExpression = BinaryExpression(
                 SyntaxKind.LogicalAndExpression,
                 binaryExpressionSyntax,
-                 GenerateCaseValueEqual(@case, caseValueIndex)
+                 GenerateCaseValueEqual(@case, caseValueIndex, semanticModel)
             );
-            return GenerateCasesBinaryExpression(@case, andExpression, caseValueIndex + 1);
+            return GenerateCasesBinaryExpression(@case, andExpression, semanticModel, caseValueIndex + 1);
         }
 
-        private static InvocationExpressionSyntax GenerateCaseValueEqual(IDiscriminatedUnionCase @case, int caseValueIndex)
+        private static ExpressionSyntax GenerateCaseValueEqual(IDiscriminatedUnionCase @case, int caseValueIndex, SemanticModel semanticModel)
+        {
+            if (GeneratorHelpers.IsStructuralEquatableType(@case.CaseValues[caseValueIndex], semanticModel))
+            {
+                return WrapEqualityWithNullGuard(@case.CaseValues[caseValueIndex], GenerateStructuralEquatableCaseValueEqual(@case.CaseValues[caseValueIndex]));
+            }
+            return GenerateDefaultCaseValueEqual(@case.CaseValues[caseValueIndex]);
+        }
+
+        private static ExpressionSyntax GenerateStructuralEquatableCaseValueEqual(CaseValue caseValue)
         {
             return InvocationExpression(
-                               MemberAccessExpression(
-                                   SyntaxKind.SimpleMemberAccessExpression,
-                                   MemberAccessExpression(
-                                       SyntaxKind.SimpleMemberAccessExpression,
-                                       QualifiedName(
-                                           QualifiedName(
-                                               QualifiedName(
-                                                   IdentifierName("System"),
-                                                   IdentifierName("Collections")
-                                                ),
-                                               IdentifierName("Generic")
-                                            ),
-                                            GenericName(Identifier("EqualityComparer"))
-                                            .WithTypeArgumentList(
-                                                TypeArgumentList(
-                                                    SingletonSeparatedList<TypeSyntax>(@case.CaseValues[caseValueIndex].Type)
-                                                )
-                                            )
-                                        ),
-                                       IdentifierName("Default")
-                                    ),
-                                    IdentifierName("Equals")
-                               )
-                            ).WithArgumentList(
-                                ArgumentList(
-                                    SeparatedList<ArgumentSyntax>(
-                                        new SyntaxNodeOrToken[]{
-                                Argument(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            ParenthesizedExpression(
+                                CastExpression(
+                                    GeneratorHelpers.StructuralEquatableName,
                                     MemberAccessExpression(
                                         SyntaxKind.SimpleMemberAccessExpression,
                                         ThisExpression(),
-                                        IdentifierName(@case.CaseValues[caseValueIndex].Name)
+                                        IdentifierName(caseValue.Name)
+                                    )
+                                )
+                            ),
+                            IdentifierName("Equals")
+                        )
+                    )
+                    .WithArgumentList(
+                        ArgumentList(
+                            SeparatedList<ArgumentSyntax>(
+                                new SyntaxNodeOrToken[]{
+                                    Argument(
+                                        MemberAccessExpression(
+                                            SyntaxKind.SimpleMemberAccessExpression,
+                                            IdentifierName("value"),
+                                            IdentifierName(caseValue.Name)
+                                        )
+                                    ),
+                                    Token(SyntaxKind.CommaToken),
+                                    Argument(GeneratorHelpers.StructuralEqualityComparerMemberAccess)
+                                }
+                            )
+                        )
+                    );
+        }
+
+        private static InvocationExpressionSyntax GenerateDefaultCaseValueEqual(CaseValue caseValue)
+        {
+            return InvocationExpression(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            MemberAccessExpression(
+                                SyntaxKind.SimpleMemberAccessExpression,
+                                QualifiedName(
+                                    QualifiedName(
+                                        QualifiedName(
+                                            IdentifierName("System"),
+                                            IdentifierName("Collections")
+                                        ),
+                                        IdentifierName("Generic")
+                                    ),
+                                    GenericName(Identifier("EqualityComparer"))
+                                    .WithTypeArgumentList(
+                                        TypeArgumentList(
+                                            SingletonSeparatedList<TypeSyntax>(caseValue.Type)
+                                        )
                                     )
                                 ),
-                                Token(SyntaxKind.CommaToken),
-                                Argument(
-                                    MemberAccessExpression(
+                                IdentifierName("Default")
+                            ),
+                            IdentifierName("Equals")
+                        )
+                    ).WithArgumentList(
+                        ArgumentList(
+                            SeparatedList<ArgumentSyntax>(
+                                new SyntaxNodeOrToken[]
+                                {
+                                    Argument(
+                                        MemberAccessExpression(
+                                            SyntaxKind.SimpleMemberAccessExpression,
+                                            ThisExpression(),
+                                            IdentifierName(caseValue.Name)
+                                        )
+                                    ),
+                                    Token(SyntaxKind.CommaToken),
+                                    Argument(
+                                        MemberAccessExpression(
+                                            SyntaxKind.SimpleMemberAccessExpression,
+                                            IdentifierName("value"),
+                                            IdentifierName(caseValue.Name)
+                                        )
+                                    )
+                                }
+                            )
+                        )
+                    );
+        }
+
+        private static ExpressionSyntax WrapEqualityWithNullGuard(CaseValue caseValue, ExpressionSyntax expressionSyntax)
+        {
+            if (caseValue.SymbolInfo.IsValueType)
+            {
+                return expressionSyntax;
+            }
+
+            var leftSyntax = MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        ThisExpression(),
+                                        IdentifierName(caseValue.Name)
+                                    );
+            var rightSyntax = MemberAccessExpression(
                                         SyntaxKind.SimpleMemberAccessExpression,
                                         IdentifierName("value"),
-                                        IdentifierName(@case.CaseValues[caseValueIndex].Name)
-                                    )
-                                )
-                                        }
-                                    )
-                                )
-                            );
+                                        IdentifierName(caseValue.Name)
+                                    );
+            return BinaryExpression(
+                SyntaxKind.LogicalOrExpression,
+                BinaryExpression(
+                    SyntaxKind.LogicalAndExpression,
+                    BinaryExpression(
+                        SyntaxKind.EqualsExpression,
+                        leftSyntax,
+                        LiteralExpression(
+                            SyntaxKind.NullLiteralExpression
+                        )
+                    ),
+                    BinaryExpression(
+                        SyntaxKind.EqualsExpression,
+                        rightSyntax,
+                        LiteralExpression(
+                            SyntaxKind.NullLiteralExpression
+                        )
+                    )
+                ),
+                BinaryExpression(
+                    SyntaxKind.LogicalAndExpression,
+                    BinaryExpression(
+                        SyntaxKind.NotEqualsExpression,
+                        leftSyntax,
+                        LiteralExpression(
+                            SyntaxKind.NullLiteralExpression
+                        )
+                    ),
+                    expressionSyntax
+                )
+            );
         }
+
     }
 }

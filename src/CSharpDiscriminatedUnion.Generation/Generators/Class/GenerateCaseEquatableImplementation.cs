@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System.Collections.Immutable;
+using System.Collections;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators.Class
 {
@@ -21,22 +22,34 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
         public DiscriminatedUnionContext<DiscriminatedUnionCase> Build(DiscriminatedUnionContext<DiscriminatedUnionCase> context)
         {
             return context.WithCases(
-                context.Cases.Select(c => c.AddMember(GenerateEqualsImplementation(context.Type, c, context.Cases))).ToImmutableArray()
+                context.Cases.Select(c => c.AddMember(GenerateEqualsImplementation(
+                    context.Type,
+                    c,
+                    context.Cases,
+                    context.SemanticModel
+                    ))).ToImmutableArray()
                 );
         }
 
-        private MethodDeclarationSyntax GenerateEqualsImplementation(TypeSyntax name, DiscriminatedUnionCase @case, ImmutableArray<DiscriminatedUnionCase> allCases)
+        private MethodDeclarationSyntax GenerateEqualsImplementation(
+            TypeSyntax name,
+            DiscriminatedUnionCase @case,
+            ImmutableArray<DiscriminatedUnionCase> allCases,
+            SemanticModel semanticModel)
         {
             return GeneratorHelpers.GenerateEquatableImplementation(name, ParameterName)
                                                      .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.OverrideKeyword)))
-                                                     .WithBody(Block(GenerateEqualsBlock(@case, allCases)));
+                                                     .WithBody(Block(GenerateEqualsBlock(@case, allCases, semanticModel)));
         }
 
-        private IEnumerable<StatementSyntax> GenerateEqualsBlock(DiscriminatedUnionCase @case, ImmutableArray<DiscriminatedUnionCase> allCases)
+        private IEnumerable<StatementSyntax> GenerateEqualsBlock(
+            DiscriminatedUnionCase @case,
+            ImmutableArray<DiscriminatedUnionCase> allCases,
+            SemanticModel semanticModel)
         {
             yield return IfValueIsNullThenReturnFalse();
             yield return IfValueIsThisThenReturnTrue();
-            yield return ReturnByMatching(@case, allCases);
+            yield return ReturnByMatching(@case, allCases, semanticModel);
         }
 
         private StatementSyntax IfValueIsNullThenReturnFalse()
@@ -55,7 +68,10 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
                 );
         }
 
-        private StatementSyntax ReturnByMatching(DiscriminatedUnionCase @case, ImmutableArray<DiscriminatedUnionCase> allCases)
+        private StatementSyntax ReturnByMatching(
+            DiscriminatedUnionCase @case,
+            ImmutableArray<DiscriminatedUnionCase> allCases,
+            SemanticModel semanticModel)
         {
             return ReturnStatement(
                 InvocationExpression(
@@ -68,7 +84,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
                 .WithArgumentList(
                     ArgumentList(
                         SeparatedList(
-                            allCases.Select(c => c.Name != @case.Name ? LambdaReturnsFalse(c) : LambdaReturnsEquality(c))
+                            allCases.Select(c => c.Name != @case.Name ? LambdaReturnsFalse(c) : LambdaReturnsEquality(c, semanticModel))
                         )
                     )
                 )
@@ -99,7 +115,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
             );
         }
 
-        private ArgumentSyntax LambdaReturnsEquality(DiscriminatedUnionCase @case)
+        private ArgumentSyntax LambdaReturnsEquality(DiscriminatedUnionCase @case, SemanticModel semanticModel)
         {
             if (@case.CaseValues.Length == 0)
             {
@@ -107,32 +123,41 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
             }
             var lambdaBody =
                 @case.CaseValues.Skip(1).Aggregate(
-                    EqualityForCase(@case.CaseValues[0]),
+                    EqualityForCase(@case.CaseValues[0], semanticModel),
                     (exp, c) =>
                     BinaryExpression(
                         SyntaxKind.LogicalAndExpression,
                         exp,
-                        EqualityForCase(c)
+                        EqualityForCase(c, semanticModel)
                     )
                 );
             return LambdaForCase(@case, lambdaBody);
         }
 
-        private ExpressionSyntax EqualityForCase(CaseValue caseValue)
+        private ExpressionSyntax EqualityForCase(CaseValue caseValue, SemanticModel semanticModel)
+        {
+            if (GeneratorHelpers.IsStructuralEquatableType(caseValue, semanticModel))
+            {
+                return StructuralEquatableEqualityForCase(caseValue);
+            }
+            return DefaultEqualityForCase(caseValue);
+        }
+
+        private static ExpressionSyntax DefaultEqualityForCase(CaseValue caseValue)
         {
             return
                 InvocationExpression(
-                   MemberAccessExpression(
-                       SyntaxKind.SimpleMemberAccessExpression,
-                       MemberAccessExpression(
-                           SyntaxKind.SimpleMemberAccessExpression,
-                           QualifiedName(
-                               QualifiedName(
-                                   QualifiedName(
-                                       IdentifierName("System"),
-                                       IdentifierName("Collections")
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            QualifiedName(
+                                QualifiedName(
+                                    QualifiedName(
+                                        IdentifierName("System"),
+                                        IdentifierName("Collections")
                                     ),
-                                   IdentifierName("Generic")
+                                    IdentifierName("Generic")
                                 ),
                                 GenericName(Identifier("EqualityComparer"))
                                 .WithTypeArgumentList(
@@ -141,28 +166,61 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
                                     )
                                 )
                             ),
-                           IdentifierName("Default")
+                            IdentifierName("Default")
                         ),
                         IdentifierName("Equals")
-                   )
-                )
-            .WithArgumentList(
-                ArgumentList(
-                    SeparatedList<ArgumentSyntax>(
-                        new SyntaxNodeOrToken[]{
-                            Argument(
-                                MemberAccessExpression(
-                                    SyntaxKind.SimpleMemberAccessExpression,
-                                    ThisExpression(),
-                                    IdentifierName(caseValue.Name)
-                                )
-                            ),
-                            Token(SyntaxKind.CommaToken),
-                            Argument(IdentifierName(caseValue.Name))
-                        }
                     )
                 )
-            );
+                .WithArgumentList(
+                    ArgumentList(
+                        SeparatedList<ArgumentSyntax>(
+                            new SyntaxNodeOrToken[]{
+                    Argument(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            ThisExpression(),
+                            IdentifierName(caseValue.Name)
+                        )
+                    ),
+                    Token(SyntaxKind.CommaToken),
+                    Argument(IdentifierName(caseValue.Name))
+                            }
+                        )
+                    )
+                );
+        }
+
+        private ExpressionSyntax StructuralEquatableEqualityForCase(CaseValue caseValue)
+        {
+            return InvocationExpression(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            ParenthesizedExpression(
+                                CastExpression(
+                                    GeneratorHelpers.StructuralEquatableName,
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        ThisExpression(),
+                                        IdentifierName(caseValue.Name)
+                                    )
+                                )
+                            ),
+                            IdentifierName("Equals")
+                        )
+                    )
+                    .WithArgumentList(
+                        ArgumentList(
+                            SeparatedList<ArgumentSyntax>(
+                                new SyntaxNodeOrToken[]{
+                                    Argument(
+                                        IdentifierName(caseValue.Name)
+                                    ),
+                                    Token(SyntaxKind.CommaToken),
+                                    Argument(GeneratorHelpers.StructuralEqualityComparerMemberAccess)
+                                }
+                            )
+                        )
+                    );
         }
     }
 }

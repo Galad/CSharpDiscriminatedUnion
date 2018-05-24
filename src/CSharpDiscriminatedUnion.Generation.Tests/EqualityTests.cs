@@ -23,7 +23,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
     [TestFixture(typeof(TrafficLightsStruct), typeof(TrafficLightsStructEqualityFixture))]
     [TestFixture(typeof(StructEmail), typeof(StructEmailEqualityFixture))]
     [TestFixture(typeof(StructBook), typeof(StructBookEqualityFixture))]
-    [TestFixture(typeof(MediaStruct), typeof(MediaStructEqualityFixture))]    
+    [TestFixture(typeof(MediaStruct), typeof(MediaStructEqualityFixture))]
     [TestFixture(typeof(IOStruct<int>), typeof(IOStructIntEqualityFixture))]
     [TestFixture(typeof(IOStruct<string>), typeof(IOStructStringEqualityFixture))]
     [TestFixture(typeof(EitherStruct<int>), typeof(EitherStructIntEqualityFixture))]
@@ -32,11 +32,19 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
     [TestFixture(typeof(EitherStruct2<int, string>), typeof(EitherStruct2IntStringEqualityFixture))]
     [TestFixture(typeof(EitherStruct2<string, int>), typeof(EitherStruct2StringIntEqualityFixture))]
     [TestFixture(typeof(EitherStruct2<string, string>), typeof(EitherStruct2StringStringEqualityFixture))]
+    [TestFixture(typeof(Media_Collection), typeof(Media_Collection_EqualityFixture), Ignore = "Not supported")]
+    [TestFixture(typeof(Media_CollectionArray), typeof(Media_CollectionArray_EqualityFixture))]
+    [TestFixture(typeof(Media_CollectionList), typeof(Media_CollectionList_EqualityFixture), Ignore = "Not supported")]
+    [TestFixture(typeof(Media_CollectionImmutableArray), typeof(Media_CollectionImmutableArray_EqualityFixture))]
+    [TestFixture(typeof(MediaStruct_Collection), typeof(MediaStruct_Collection_EqualityFixture), Ignore = "Not supported")]
+    [TestFixture(typeof(MediaStruct_CollectionArray), typeof(MediaStruct_CollectionArray_EqualityFixture))]
+    [TestFixture(typeof(MediaStruct_CollectionList), typeof(MediaStruct_CollectionList_EqualityFixture), Ignore = "Not supported")]
+    [TestFixture(typeof(MediaStruct_CollectionImmutableArray), typeof(MediaStruct_CollectionImmutableArray_EqualityFixture))]
     public class EqualityTests<T, TFixtureData>
         where TFixtureData : UnionEqualityFixture<T>, new()
         where T : IEquatable<T>
     {
-        private static readonly TFixtureData Data = new TFixtureData();                
+        private static readonly TFixtureData Data = new TFixtureData();
         public static IEnumerable<TestCaseData> EquatableEqualsTestCases => Data.EquatableEqualsTestCases;
         public static IEnumerable<TestCaseData> OperatorEqualityTestCases => Data.OperatorEqualityTestCases;
         public static IEnumerable<TestCaseData> OperatorInequalityTestCases => Data.OperatorInequalityTestCases;
@@ -67,7 +75,9 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
         private static MethodInfo EqualOperatorMethod = typeof(T).GetMethod("op_Equality", BindingFlags.Static | BindingFlags.Public);
         [TestCaseSource(nameof(OperatorEqualityTestCases))]
         public bool EqualOperator_ShouldReturnCorrectValue(T actual, T other)
-        {
+        {            
+            Console.WriteLine("actual: " + actual);
+            Console.WriteLine("other: " + other);            
             return (bool)EqualOperatorMethod.Invoke(null, new object[] { actual, other });
         }
 
@@ -77,7 +87,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
         {
             return (bool)InequalOperatorMethod.Invoke(null, new object[] { actual, other });
         }
-        
+
         [TestCaseSource(nameof(GetHashCodeSameValues))]
         public void GetHashCode_WithSameValues_ReturnTheSameValue(T value, T otherValue)
         {
@@ -85,7 +95,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
             var other = otherValue.GetHashCode();
             Assert.That(actual, Is.EqualTo(other));
         }
-        
+
         [TestCaseSource(nameof(GetHashCodeDifferentValues))]
         public void GetHashCode_WithDifferentValues_DoesNotReturnTheSameValue(
             T value,

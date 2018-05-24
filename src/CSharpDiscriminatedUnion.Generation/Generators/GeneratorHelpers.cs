@@ -14,6 +14,26 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
     internal static partial class GeneratorHelpers
     {
         public const string TagFieldName = "_tag";
+        public static NameSyntax StructuralEquatableName { get; } = QualifiedName(
+                                        QualifiedName(
+                                            IdentifierName("System"),
+                                            IdentifierName("Collections")
+                                        ),
+                                        IdentifierName("IStructuralEquatable")
+                                    );
+        public static ExpressionSyntax StructuralEqualityComparerMemberAccess { get; } = MemberAccessExpression(
+                                            SyntaxKind.SimpleMemberAccessExpression,
+                                            MemberAccessExpression(
+                                                SyntaxKind.SimpleMemberAccessExpression,
+                                                MemberAccessExpression(
+                                                    SyntaxKind.SimpleMemberAccessExpression,
+                                                    IdentifierName("System"),
+                                                    IdentifierName("Collections")
+                                                ),
+                                                IdentifierName("StructuralComparisons")
+                                            ),
+                                            IdentifierName("StructuralEqualityComparer")
+                                        );
 
         public static MethodDeclarationSyntax CreateMatchMethod(IEnumerable<IDiscriminatedUnionCase> cases, SyntaxToken generateParameterName)
         {            
@@ -82,8 +102,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                 )
             );
         }
-
-
+                
         public static MethodDeclarationSyntax GenerateEquatableImplementation(TypeSyntax applyToClassType, string parameterName)
         {
             return MethodDeclaration(
@@ -277,6 +296,13 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                      )
                  )
              );
+        }
+
+        public static bool IsStructuralEquatableType(CaseValue caseValue, SemanticModel semanticModel)
+        {
+            var structuralEquatableMembers = semanticModel.Compilation.GetTypeByMetadataName("System.Collections.IStructuralEquatable").GetMembers();
+            var type = caseValue.SymbolInfo;            
+            return structuralEquatableMembers.Any(m => type.FindImplementationForInterfaceMember(m) != null);
         }
     }
 }

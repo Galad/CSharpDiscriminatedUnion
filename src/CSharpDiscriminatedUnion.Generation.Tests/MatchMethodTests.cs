@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Ploeh.AutoFixture;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -53,6 +54,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
         private static void TestMatchMethod(Type type)
         {
             var fixture = new Fixture();
+            fixture.Register(() => ImmutableArray.Create(fixture.CreateMany<string>().ToArray()));
             var assertion = new MatchMethodCanHandleAllCasesAssertion(fixture);
             assertion.Verify(type);
         }
