@@ -2,8 +2,8 @@
 using Moq;
 using Moq.Language.Flow;
 using NUnit.Framework;
-using Ploeh.AutoFixture.Idioms;
-using Ploeh.AutoFixture.Kernel;
+using AutoFixture.Idioms;
+using AutoFixture.Kernel;
 using System;
 using System.Collections.Generic;
 using System.Linq;

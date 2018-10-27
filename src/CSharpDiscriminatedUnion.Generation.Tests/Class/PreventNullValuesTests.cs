@@ -1,7 +1,7 @@
 ﻿using CSharpDiscriminatedUnion.Generation.Tests.UnionTypes;
 using NUnit.Framework;
-using Ploeh.AutoFixture;
-using Ploeh.AutoFixture.Idioms;
+using AutoFixture;
+using AutoFixture.Idioms;
 using System;
 using System.Collections.Generic;
 using System.Linq;

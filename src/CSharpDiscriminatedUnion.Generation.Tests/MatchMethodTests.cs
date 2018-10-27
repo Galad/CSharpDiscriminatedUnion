@@ -2,7 +2,7 @@
 using CSharpDiscriminatedUnion.Generation.Tests.Idioms;
 using CSharpDiscriminatedUnion.Generation.Tests.UnionTypes;
 using NUnit.Framework;
-using Ploeh.AutoFixture;
+using AutoFixture;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
