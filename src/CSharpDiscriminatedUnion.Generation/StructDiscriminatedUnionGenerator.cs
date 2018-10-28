@@ -19,6 +19,7 @@ namespace CSharpDiscriminatedUnion.Generation
                   new GenerateStructEqualsOverride(),
                   new GenerateStructGetHashCode(),
                   new GenerateStructMatchMethod(),
+                  new GenerateMatchDefaultCaseMethod<StructDiscriminatedUnionCase>(),
                   new GenerateDebugView<StructDiscriminatedUnionCase>()
                   )
         {            

@@ -1,6 +1,5 @@
 ﻿using CSharpDiscriminatedUnion.Attributes;
 using Moq;
-using Moq.Language.Flow;
 using NUnit.Framework;
 using AutoFixture.Idioms;
 using AutoFixture.Kernel;
@@ -9,19 +8,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CSharpDiscriminatedUnion.Generation.Tests.Idioms
 {
     /// <summary>
     /// Verify that a Match method can handle all the declared cases, ie there is a Func parameter for each case
     /// </summary>
-    public sealed class MatchMethodCanHandleAllCasesAssertion : IdiomaticAssertion
+    public sealed class MatchDefaultCaseMethodCanHandleAllCasesAssertion : IdiomaticAssertion
     {
         private readonly ISpecimenBuilder specimenBuilder;
 
-        public MatchMethodCanHandleAllCasesAssertion(ISpecimenBuilder specimenBuilder)
+        public MatchDefaultCaseMethodCanHandleAllCasesAssertion(ISpecimenBuilder specimenBuilder)
         {
             this.specimenBuilder = specimenBuilder ?? throw new ArgumentNullException(nameof(specimenBuilder));
         }
@@ -33,7 +30,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.Idioms
             {
                 testedType = type.MakeGenericType(type.GetGenericArguments().Select(_ => typeof(int)).ToArray());
             }
-            var matchMethods = testedType.GetMethods().Where(m => m.Name == "Match" && m.GetParameters().All(p => p.Name != "none"));
+            var matchMethods = testedType.GetMethods().Where(m => m.Name == "Match" && m.GetParameters().Any(p => p.Name == "none"));
             if (!matchMethods.Any())
             {
                 ThrowAssertionException(testedType, $"The type {testedType.Name} does not contain a Match method.");
@@ -67,6 +64,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.Idioms
             foreach (var @case in cases)
             {
                 object sut;
+                object notSut = null;
                 object[] values;
                 if (@case.Values.Length == 0)
                 {
@@ -79,10 +77,29 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.Idioms
                     values = @case.Values.Select(v => create(v.FieldType)).ToArray();
                     sut = type.GetMethods(BindingFlags.Public | BindingFlags.Static)
                               .Single(m => IsCase(m.Name, @case.Name))
-                              .Invoke(null, values);
+                              .Invoke(null, values);                   
                 }
-                object createFuncMock(Type funcType, bool expectedCase)
+
+                if (cases.Length > 1)
                 {
+                    var otherCase = cases.First(c => c.Name != @case.Name);
+
+                    if (otherCase.Values.Length == 0)
+                    {
+                        notSut = type.GetField(otherCase.Name, BindingFlags.Public | BindingFlags.Static)
+                                     .GetValue(null);
+                    }
+                    else
+                    {
+                        var otherValues = otherCase.Values.Select(v => create(v.FieldType)).ToArray();
+                        notSut = type.GetMethods(BindingFlags.Public | BindingFlags.Static)
+                                     .First(m => IsCase(m.Name, otherCase.Name))
+                                     .Invoke(null, otherValues);
+                    }
+                }
+
+                object createFuncMock(Type funcType, bool expectedCase)
+                {                       
                     var mock = typeof(Mock<>).MakeGenericType(funcType)
                                              .GetConstructor(new Type[] { })
                                              .Invoke(new object[] { });
@@ -115,18 +132,39 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.Idioms
                     return (mock as Mock).Object;
                 }
 
-                var parameters = matchMethod
-                                          .MakeGenericMethod(typeof(object))
-                                          .GetParameters()
-                                          .Select(p => (p, c: cases.First(c => c.Name == p.Name.Remove(0, "match".Length))))
-                                          .Select((p, i) => createFuncMock(p.p.ParameterType, p.c.Name == @case.Name))
-                                          .ToArray();
-                var actual = matchMethod.MakeGenericMethod(typeof(object)).Invoke(sut, parameters);
-                if (actual != expected)
                 {
-                    ThrowAssertionException(type, $"Method {matchMethod}, with case {@case.Name}, did not match the value as expected.");
+                    // verify the behavior when there is a single match function and the current value is matched
+                    var parameters = GetParameterInfo(matchMethod, cases)
+                                              .Select((p, i) => p.c != null && p.c.Name != @case.Name ? null : createFuncMock(p.p.ParameterType, p.c != null))
+                                              .ToArray();
+                    var actual = matchMethod.MakeGenericMethod(typeof(object)).Invoke(sut, parameters);
+                    if (actual != expected)
+                    {
+                        ThrowAssertionException(type, $"Method {matchMethod}, with case {@case.Name}, did not match the value as expected.");
+                    }
+                }
+
+                if(notSut != null)
+                {
+                    // verify the behavior when there is a single match function and the current value is not matched
+                    var parameters = GetParameterInfo(matchMethod, cases)
+                                              .Select((p, i) => p.c != null && p.c.Name != @case.Name ? null : createFuncMock(p.p.ParameterType, p.c == null))
+                                              .ToArray();
+                    var actual = matchMethod.MakeGenericMethod(typeof(object)).Invoke(notSut, parameters);
+                    if (actual != expected)
+                    {
+                        ThrowAssertionException(type, $"Method {matchMethod}, with case {@case.Name}, did not match the value as expected.");
+                    }
                 }
             }
+        }
+
+        private static IEnumerable<(ParameterInfo p, UnionCase c)> GetParameterInfo(MethodInfo matchMethod, UnionCase[] cases)
+        {
+            return matchMethod
+                    .MakeGenericMethod(typeof(object))
+                    .GetParameters()
+                    .Select(p => (p, c: p.Name == "none" ? null : cases.First(c => c.Name == p.Name.Remove(0, "match".Length))));
         }
 
         private bool IsCase(string methodName, string caseName)

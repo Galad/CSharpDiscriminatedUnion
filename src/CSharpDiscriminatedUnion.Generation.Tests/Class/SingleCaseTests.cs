@@ -2,6 +2,7 @@
 using System.Reflection;
 using NUnit.Framework;
 using CSharpDiscriminatedUnion.Generation.Tests.UnionTypes;
+using System.Collections.Generic;
 
 namespace CSharpDiscriminatedUnion.Generation.Tests.Class
 {
@@ -23,7 +24,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.Class
         public void SingleCase_EqualsShouldReturnCorrectValue()
         {
             var actual = SingleCaseUnion.Unit;
-            Assert.That(actual, Is.EqualTo(SingleCaseUnion.Unit));
+            Assert.That(actual.Equals(SingleCaseUnion.Unit), Is.True);
         }
     }
 }

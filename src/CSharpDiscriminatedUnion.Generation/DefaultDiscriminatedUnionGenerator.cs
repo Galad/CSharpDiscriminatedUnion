@@ -14,6 +14,7 @@ namespace CSharpDiscriminatedUnion.Generation
                   new CreateCasesPartialClassConstructor(),
                   new GenerateClassCasesFactoryMethods(factoryPrefix, preventNull),
                   new GenerateAbstractMatchMethod(),
+                  new GenerateMatchDefaultCaseMethod<DiscriminatedUnionCase>(),
                   new GenerateMatchImplementation(),
                   new GenerateAbstractEquatableImplementation<DiscriminatedUnionCase>(),
                   new GenerateCaseEquatableImplementation(),

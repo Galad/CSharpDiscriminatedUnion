@@ -44,16 +44,43 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             return match;
         }
 
+        public static MethodDeclarationSyntax CreateMatchDefaultCaseMethod(IEnumerable<IDiscriminatedUnionCase> cases, SyntaxToken generateParameterName)
+        {
+            var caseParameters = cases.Select(c => defaultNullParameter(GetCaseMatchFunction(c, generateParameterName)));
+            var noneParameter = Parameter(Identifier("none"))
+                                    .WithType(
+                                        GenericName(
+                                            Identifier("System.Func"),
+                                            TypeArgumentList(
+                                                SeparatedList(new TypeSyntax[] { IdentifierName(generateParameterName) })
+                                            )
+                                        )
+                                    );
+            var allParameters = new[] { noneParameter }.Concat(caseParameters).ToArray();
+            var match =
+                MethodDeclaration(IdentifierName(generateParameterName), "Match")
+                             .AddTypeParameterListParameters(TypeParameter(generateParameterName))
+                             .AddParameterListParameters(allParameters);
+                        
+            return match;
+
+            ParameterSyntax defaultNullParameter(ParameterSyntax parameter)
+            {
+                return parameter.WithDefault(SyntaxFactory.EqualsValueClause(NullExpression()));
+            }
+        }
+
         private static ParameterSyntax GetCaseMatchFunction(IDiscriminatedUnionCase @case, SyntaxToken generateParameterName)
         {
             return Parameter(
                     Identifier("match" + @case.Name.Text)
                     )
-                    .WithType(GenericName(
-                        Identifier("System.Func"),
-                        TypeArgumentList(
-                            SeparatedList(
-                                @case.CaseValues.Select(vc => vc.Type).Concat(new[] { IdentifierName(generateParameterName) })
+                    .WithType(
+                        GenericName(
+                            Identifier("System.Func"),
+                            TypeArgumentList(
+                                SeparatedList(
+                                    @case.CaseValues.Select(vc => vc.Type).Concat(new[] { IdentifierName(generateParameterName) })
                                 )
                             )
                         )

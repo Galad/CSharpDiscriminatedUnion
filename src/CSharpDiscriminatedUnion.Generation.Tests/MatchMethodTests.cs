@@ -26,7 +26,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
                                 t != typeof(NoCaseUnionGeneric<>) &&
                                 t != typeof(NoCaseUnionGeneric<,>) &&
                                 t != typeof(NoCaseUnionGeneric<,,>) &&
-                                t != typeof(NoCaseUnionGenericWithConstraints<,,>) && 
+                                t != typeof(NoCaseUnionGenericWithConstraints<,,>) &&
                                 t != typeof(PreventNull5<>) &&
                                 t.Namespace == typeof(NoCaseUnion).Namespace
                           );
@@ -56,6 +56,39 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
             var fixture = new Fixture();
             fixture.Register(() => ImmutableArray.Create(fixture.CreateMany<string>().ToArray()));
             var assertion = new MatchMethodCanHandleAllCasesAssertion(fixture);
+            assertion.Verify(type);
+        }
+
+        [TestCaseSource(nameof(MatchMethodCases))]
+        public void TestMatchMethod_HasDefaultCase(Type type)
+        {
+            var actual = type.GetMethods().Where(m =>
+            {
+                if (m.Name != "Match")
+                {
+                    return false;
+                }
+                var genericArgument = m.GetGenericArguments().Single();
+                var noneFunc = typeof(Func<>).MakeGenericType(genericArgument);
+                var parameters = m.GetParameters();
+                return parameters.Any(p => p.Name == "none" && p.ParameterType == noneFunc) &&
+                       parameters.Where(p => p.Name != "none")
+                                 .All(p => p.IsOptional && p.DefaultValue == null);
+            }).ToList();
+
+            Assert.That(
+                actual,
+                Has.Count.EqualTo(1),
+                "No Match method with default case function where found. The method must be generic, have a parameter 'Func<T> none', and all the other parameters must be optional."
+                );
+        }
+
+        [TestCaseSource(nameof(MatchMethodCases))]
+        public void TestMatchMethod_DefaultCaseReturnsCorrectValue(Type type)
+        {
+            var fixture = new Fixture();
+            fixture.Register(() => ImmutableArray.Create(fixture.CreateMany<string>().ToArray()));
+            var assertion = new MatchDefaultCaseMethodCanHandleAllCasesAssertion(fixture);
             assertion.Verify(type);
         }
     }
