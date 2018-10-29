@@ -53,7 +53,15 @@ Here are some examples of what you can do with the type `Maybe<T>`
     }
     
 ## Installation
-See instructions here : https://github.com/AArnott/CodeGeneration.Roslyn#packaging-up-your-code-generator-for-others-use
+Install the NuGet package CSharpDiscriminatedUnion
+Install the NuGet package CodeGeneration.Roslyn.BuildTime (won't be necessary in the future)
+Add the required dotnet CLI tool:
+```xml
+  <DotNetCliToolReference Include="dotnet-codegen" Version="0.4.88" />
+```
+Make sure that the version of the tool matches the version of CodeGeneration that is installed.
+
+For more information see https://github.com/AArnott/CodeGeneration.Roslyn#packaging-up-your-code-generator-for-others-use
 
 ## Template reference
 
