@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
+using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators
 {
+
     internal sealed class GenerateDebugView<T> : IDiscriminatedUnionGenerator<T> where T : IDiscriminatedUnionCase
     {
         public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)
@@ -17,7 +16,8 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             {
                 return context;
             }
-            return context.AddMember(GenerateDebugViewProperty(context));
+            return context.AddMember(GenerateDebugViewProperty(context))
+                          .AddAttributeLists(GeneratorHelpers.CreateDebuggerDisplayAttributeList());
         }
 
         private MemberDeclarationSyntax GenerateDebugViewProperty(DiscriminatedUnionContext<T> context)

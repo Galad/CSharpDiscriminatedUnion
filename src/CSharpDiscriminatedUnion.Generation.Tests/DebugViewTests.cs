@@ -2,9 +2,8 @@
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CSharpDiscriminatedUnion.Generation.Tests
 {
@@ -14,7 +13,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
         {
             get
             {
-                return new(object, string)[]
+                return new (object, string)[]
                 {
                     (UnitStruct.Unit, "Unit()"),
                     (BooleanUnion.True, "True()"),
@@ -43,7 +42,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
                     (Media.NewBook("a", 200, "b"), "Book(a, 200, b)"),
                     (Media.NewMovie("a", TimeSpan.Zero, "b"), "Movie(a, 00:00:00, b)"),
                 }
-                .Select(d => new TestCaseData(d.Item1, d.Item2));                             
+                .Select(d => new TestCaseData(d.Item1, d.Item2));
             }
         }
 
@@ -61,7 +60,12 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
             // act
             var actual = (string)property.GetValue(sut);
             // assert
-            Assert.That(actual, Is.EqualTo(expected));
+            Assert.Multiple(() =>
+            {
+                Assert.That(actual, Is.EqualTo(expected));
+                var attributes = sut.GetType().GetCustomAttributes(typeof(DebuggerDisplayAttribute), true);
+                Assert.That(attributes.Cast<DebuggerDisplayAttribute>().Select(a => a.Value), Is.EquivalentTo(new[] { "{DebugView}" }));
+            });
         }
     }
 }

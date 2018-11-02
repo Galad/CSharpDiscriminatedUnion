@@ -331,5 +331,35 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             var type = caseValue.SymbolInfo;            
             return structuralEquatableMembers.Any(m => type.FindImplementationForInterfaceMember(m) != null);
         }
+
+        private static readonly AttributeListSyntax _debuggerDisplayAttribute = AttributeList(
+                                SingletonSeparatedList(
+                                    Attribute(
+                                        QualifiedName(
+                                            QualifiedName(
+                                                IdentifierName("System"),
+                                                IdentifierName("Diagnostics")
+                                            ),
+                                            IdentifierName("DebuggerDisplay")
+                                        )
+                                    )
+                                    .WithArgumentList(
+                                        AttributeArgumentList(
+                                            SeparatedList<AttributeArgumentSyntax>(
+                                                new SyntaxNodeOrToken[]{
+                                                    AttributeArgument(
+                                                        LiteralExpression(
+                                                            SyntaxKind.StringLiteralExpression,
+                                                            Literal("{DebugView}")
+                                                        )
+                                                    )
+                                                }
+                                            )
+                                        )
+                                    )
+                                )
+                            );
+
+        public static AttributeListSyntax CreateDebuggerDisplayAttributeList() => _debuggerDisplayAttribute;
     }
 }
