@@ -72,9 +72,12 @@ Here are some examples of what you can do with the type `Maybe<T>`
 ## Installation
 [Installation]: #installation
 * Install the NuGet package CSharpDiscriminatedUnion
+```xml
+    <PackageReference Include="CSharpDiscriminatedUnion" Version="1.0.0" PrivateAssets="all" />
+```
 * Add the required dotnet CLI tool:
 ```xml
-  <DotNetCliToolReference Include="dotnet-codegen" Version="0.4.88" />
+    <DotNetCliToolReference Include="dotnet-codegen" Version="0.4.88" />
 ```
 Make sure that the version of the tool matches the version of CodeGeneration that is installed.
 
