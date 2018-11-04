@@ -1,15 +1,11 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Validation;
-using CSharpDiscriminatedUnion.Generation;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators
 {
@@ -21,7 +17,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         private readonly string _prefix;
         private readonly bool _preventNull;
         private readonly Func<DiscriminatedUnionContext<T>, T, ExpressionSyntax> _singletonInitializer;
-        private readonly Func<DiscriminatedUnionContext<T>, T, ExpressionSyntax> _generateFactoryMethodReturnStatement;        
+        private readonly Func<DiscriminatedUnionContext<T>, T, ExpressionSyntax> _generateFactoryMethodReturnStatement;
 
         public GenerateCaseFactoryMethods(
             string prefix,
@@ -35,7 +31,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             _singletonInitializer = singletonInitializer;
             _generateFactoryMethodReturnStatement = generateFactoryMethodReturnStatement;
         }
-        
+
         public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)
         {
             return context.AddMembers(AddCasesMembers(context));
@@ -62,10 +58,12 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             DiscriminatedUnionContext<T> context,
             T singleCase)
         {
+            var summaryLines = GetSummaryLines(singleCase);
+
             return FieldDeclaration(
                         List<AttributeListSyntax>(),
                         TokenList(
-                            Token(SyntaxKind.PublicKeyword),
+                            Token(GeneratorHelpers.CreateXmlDocumentation(summaryLines), SyntaxKind.PublicKeyword, TriviaList()),                            
                             Token(SyntaxKind.StaticKeyword),
                             Token(SyntaxKind.ReadOnlyKeyword)
                         ),
@@ -87,12 +85,15 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             DiscriminatedUnionContext<T> context,
             T singleCase)
         {
+            var summaryLines = GetSummaryLines(singleCase);
+            var parametersDescriptions = singleCase.CaseValues.Select(c => (c.Name.ValueText, c.Description));
+
             return MethodDeclaration(
                             context.Type,
                             _prefix + singleCase.Name)
                         .WithModifiers(
                             TokenList(
-                                Token(SyntaxKind.PublicKeyword),
+                                Token(GeneratorHelpers.CreateXmlDocumentation(summaryLines, parametersDescriptions), SyntaxKind.PublicKeyword, TriviaList()),
                                 Token(SyntaxKind.StaticKeyword)
                             )
                         )
@@ -113,8 +114,19 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                         ;
         }
 
+        private static List<string> GetSummaryLines(T singleCase)
+        {
+            var summaryLines = new List<string>() { "Creates a " + singleCase.Name };
+            if (singleCase.Description != null)
+            {
+                summaryLines.AddRange(singleCase.Description.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries));
+            }
+
+            return summaryLines;
+        }
+
         private IEnumerable<StatementSyntax> GenerateCreateCaseFactoryBlock(
-            DiscriminatedUnionContext<T> context, 
+            DiscriminatedUnionContext<T> context,
             T singleCase)
         {
             if (_preventNull)

@@ -24,7 +24,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.UnionTypes
             }
         }
     }
-
+        
     [GenerateDiscriminatedUnion]
     public partial class Age
     {

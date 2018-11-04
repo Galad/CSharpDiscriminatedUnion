@@ -13,6 +13,7 @@ namespace CSharpDiscriminatedUnion.Generation
             public ClassDeclarationSyntax GeneratedPartialClass;
             public ImmutableArray<CaseValue> CaseValues;
             public int CaseNumber;
+            public string Description;
         }
 
         public TypeDeclarationSyntax UserDefinedClass => _readonlyContext.UserDefinedClass;
@@ -21,13 +22,15 @@ namespace CSharpDiscriminatedUnion.Generation
         public int CaseNumber => _readonlyContext.CaseNumber;
         public SyntaxToken Name => _readonlyContext.UserDefinedClass.Identifier;
         public ImmutableArray<MemberDeclarationSyntax> Members { get; }
+        public string Description => _readonlyContext.Description;        
         private readonly ReadonlyContext _readonlyContext;
 
         public DiscriminatedUnionCase(
             TypeDeclarationSyntax userDefinedClass,
             ClassDeclarationSyntax generatedPartialClass,
             ImmutableArray<CaseValue> caseValues,
-            int caseNumber)
+            int caseNumber,
+            string description = null)
         {
             Requires.That(!caseValues.IsDefault, nameof(caseValues), "Cases cannot be a default value");
             _readonlyContext = new ReadonlyContext()
@@ -35,7 +38,8 @@ namespace CSharpDiscriminatedUnion.Generation
                 UserDefinedClass = Requires.NotNull(userDefinedClass, nameof(userDefinedClass)),
                 GeneratedPartialClass = Requires.NotNull(generatedPartialClass, nameof(generatedPartialClass)),
                 CaseValues = caseValues,
-                CaseNumber = caseNumber
+                CaseNumber = caseNumber,
+                Description = description,
             };
             Members = ImmutableArray<MemberDeclarationSyntax>.Empty;
         }

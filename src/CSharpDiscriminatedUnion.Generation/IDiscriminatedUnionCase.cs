@@ -8,5 +8,6 @@ namespace CSharpDiscriminatedUnion.Generation
         ImmutableArray<CaseValue> CaseValues { get; }
         int CaseNumber { get; }
         SyntaxToken Name { get; }
+        string Description { get; }
     }
 }

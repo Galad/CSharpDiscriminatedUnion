@@ -36,7 +36,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                                         );
 
         public static MethodDeclarationSyntax CreateMatchMethod(IEnumerable<IDiscriminatedUnionCase> cases, SyntaxToken generateParameterName)
-        {            
+        {
             var match =
                 MethodDeclaration(IdentifierName(generateParameterName), "Match")
                              .AddTypeParameterListParameters(TypeParameter(generateParameterName))
@@ -61,7 +61,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                 MethodDeclaration(IdentifierName(generateParameterName), "Match")
                              .AddTypeParameterListParameters(TypeParameter(generateParameterName))
                              .AddParameterListParameters(allParameters);
-                        
+
             return match;
 
             ParameterSyntax defaultNullParameter(ParameterSyntax parameter)
@@ -129,7 +129,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                 )
             );
         }
-                
+
         public static MethodDeclarationSyntax GenerateEquatableImplementation(TypeSyntax applyToClassType, string parameterName)
         {
             return MethodDeclaration(
@@ -290,7 +290,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                 )
                 });
             }
-            
+
             return SwitchStatement(
                     MemberAccessExpression(
                         SyntaxKind.SimpleMemberAccessExpression,
@@ -328,7 +328,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         public static bool IsStructuralEquatableType(CaseValue caseValue, SemanticModel semanticModel)
         {
             var structuralEquatableMembers = semanticModel.Compilation.GetTypeByMetadataName("System.Collections.IStructuralEquatable").GetMembers();
-            var type = caseValue.SymbolInfo;            
+            var type = caseValue.SymbolInfo;
             return structuralEquatableMembers.Any(m => type.FindImplementationForInterfaceMember(m) != null);
         }
 
@@ -361,5 +361,37 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                             );
 
         public static AttributeListSyntax CreateDebuggerDisplayAttributeList() => _debuggerDisplayAttribute;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="summary"></param>
+        /// <param name="parameters"></param>
+        /// <param name="returnValue"></param>
+        /// <returns></returns>
+        public static SyntaxTriviaList CreateXmlDocumentation(
+            IEnumerable<string> summary,
+            IEnumerable<(string name, string description)> parameters = null,
+            string returns = null)
+        {
+            var xmlSummary = string.Join("\n", summary.Select(s => "/// " + s));
+            var xmlParameters = parameters == null
+                                    ? string.Empty
+                                    : "\n" + string.Join("\n", parameters.Select(p => getParameterDoc(p.name, p.description)));
+            var xmlReturns = returns == null ? string.Empty : "\n" + $"/// <return>{returns}</returns>";
+            var xmlDoc = $@"
+/// <summary>
+{xmlSummary}
+/// </summary>{xmlParameters}{xmlReturns}
+";
+
+            var triviaList = ParseLeadingTrivia(xmlDoc);
+            return triviaList;
+
+string getParameterDoc(string name, string description)
+            {
+                return $@"/// <param name=""{name}"">{description}</param>";
+            }
+        }
     }
 }

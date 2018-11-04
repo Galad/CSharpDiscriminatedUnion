@@ -89,7 +89,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
             var fixture = new Fixture();
             fixture.Register(() => ImmutableArray.Create(fixture.CreateMany<string>().ToArray()));
             var assertion = new MatchDefaultCaseMethodCanHandleAllCasesAssertion(fixture);
-            assertion.Verify(type);
+            assertion.Verify(type);            
         }
     }
 }

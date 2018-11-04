@@ -9,28 +9,32 @@ namespace CSharpDiscriminatedUnion.Generation
     {
         private class ReadonlyContext
         {
-            public SyntaxToken Name;   
+            public SyntaxToken Name;
             public ImmutableArray<CaseValue> CaseValues;
             public int CaseNumber;
+            public string Description;
         }
-        
+
         public ImmutableArray<CaseValue> CaseValues => _readonlyContext.CaseValues;
         public int CaseNumber => _readonlyContext.CaseNumber;
         public SyntaxToken Name => _readonlyContext.Name;
         public ImmutableArray<MemberDeclarationSyntax> Members { get; }
+        public string Description => _readonlyContext.Description;
         private readonly ReadonlyContext _readonlyContext;
 
         public StructDiscriminatedUnionCase(
             SyntaxToken name,
             ImmutableArray<CaseValue> caseValues,
-            int caseNumber)
+            int caseNumber,
+            string description = null)
         {
             Requires.That(!caseValues.IsDefault, nameof(caseValues), "Cases cannot be a default value");
             _readonlyContext = new ReadonlyContext()
-            {                
+            {
                 CaseValues = caseValues,
                 CaseNumber = caseNumber,
-                Name = name
+                Name = name,
+                Description = description
             };
             Members = ImmutableArray<MemberDeclarationSyntax>.Empty;
         }

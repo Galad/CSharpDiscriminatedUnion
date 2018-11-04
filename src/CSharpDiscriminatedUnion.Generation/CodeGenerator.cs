@@ -1,14 +1,14 @@
-﻿using CodeGeneration.Roslyn;
-using CSharpDiscriminatedUnion.Attributes;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeGeneration.Roslyn;
+using CSharpDiscriminatedUnion.Attributes;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Validation;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
@@ -21,7 +21,6 @@ namespace CSharpDiscriminatedUnion.Generation
 
         public CodeGenerator(AttributeData attributeData)
         {
-            //Debugger.Launch();
             Requires.NotNull(attributeData, nameof(attributeData));
             var arguments = attributeData.NamedArguments.ToImmutableDictionary(kvp => kvp.Key, k => k.Value.Value);
             T GetAttributeValue<T>(string name, T defaultValue, T nullValue)
@@ -31,7 +30,7 @@ namespace CSharpDiscriminatedUnion.Generation
             _caseFactoryPrefix = GetAttributeValue(nameof(GenerateDiscriminatedUnionAttribute.CaseFactoryPrefix), "New", "");
             _preventNullValues = GetAttributeValue(nameof(GenerateDiscriminatedUnionAttribute.PreventNullValues), false, false);
         }
-
+                
         public Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(
             TransformationContext context,
             IProgress<Diagnostic> progress,
@@ -225,7 +224,7 @@ namespace CSharpDiscriminatedUnion.Generation
         }
 
         private ImmutableArray<DiscriminatedUnionCase> GetCases(ClassDeclarationSyntax applyTo, INamedTypeSymbol applyToClassSymbolInfo, SemanticModel semanticModel)
-        {
+        {            
             var casesClass = applyTo.ChildNodes()
                                     .Where(n => n.Kind() == SyntaxKind.ClassDeclaration &&
                                                 (n as ClassDeclarationSyntax).Identifier.ValueText == "Cases");
@@ -237,8 +236,9 @@ namespace CSharpDiscriminatedUnion.Generation
                       .Select((c, i) => new DiscriminatedUnionCase(
                             c,
                             CreateEmptyCasePartialClass(c),
-                            GetCaseParameters(c, semanticModel).Select(f => new CaseValue(f.Item1, f.Item2.Symbol as ITypeSymbol)).ToImmutableArray(),
-                            i + 1
+                            GetCaseParameters(c, semanticModel).Select(f => new CaseValue(f.Item1, f.Item2.Symbol as ITypeSymbol, GetSummaryContent(f.Item1))).ToImmutableArray(),
+                            i + 1,
+                            GetSummaryContent(c)
                             )
                       )
                       .ToImmutableArray();
@@ -266,10 +266,12 @@ namespace CSharpDiscriminatedUnion.Generation
                              {
                                  var isDefault = (bool)a.ConstructorArguments[1].Value;
                                  var caseName = (string)a.ConstructorArguments[0].Value;
+                                 var description = (string)a.ConstructorArguments[2].Value;
                                  var @case = new StructDiscriminatedUnionCase(
                                      Identifier(caseName),
-                                     ImmutableArray<CaseValue>.Empty,
-                                     i);
+                                     ImmutableArray<CaseValue>.Empty,                                     
+                                     i,
+                                     description);
                                  return (isDefault, @case);
                              });
             }
@@ -284,19 +286,21 @@ namespace CSharpDiscriminatedUnion.Generation
                                   var attribute = symbol.GetAttributes().Where(a => a.AttributeClass == caseAttributeType).Single();
                                   var name = (string)attribute.ConstructorArguments[0].Value;
                                   var isDefault = (bool)attribute.ConstructorArguments[1].Value;
-                                  return (declaration: f, symbol, name, isDefault);
+                                  var description = (string)attribute.ConstructorArguments[2].Value;
+                                  return (declaration: f, symbol, name, isDefault, description);
                               })
                               .GroupBy(f => f.name)
-                              .Select((g, i) => getCase(i, g.Key, g.Select(f => (f.declaration, f.symbol, f.isDefault))));
+                              .Select((g, i) => getCase(i, g.Key, g.Select(f => (f.declaration, f.symbol, f.isDefault, f.description))));
             }
 
-            (bool, StructDiscriminatedUnionCase) getCase(int caseNumber, string caseName, IEnumerable<(FieldDeclarationSyntax, IFieldSymbol, bool)> symbols)
+            (bool, StructDiscriminatedUnionCase) getCase(int caseNumber, string caseName, IEnumerable<(FieldDeclarationSyntax, IFieldSymbol, bool, string)> symbols)
             {
                 var isDefault = symbols.Any(s => s.Item3);
                 var @case = new StructDiscriminatedUnionCase(
                     Identifier(caseName),
-                    symbols.Select(s => new CaseValue(s.Item1, s.Item2.Type)).ToImmutableArray(),
-                    caseNumber
+                    symbols.Select(s => new CaseValue(s.Item1, s.Item2.Type, GetSummaryContent(s.Item1))).ToImmutableArray(),
+                    caseNumber,
+                    symbols.Select(f => f.Item4).FirstOrDefault(d => d != null)
                 );
                 return (isDefault, @case);
             }
@@ -304,7 +308,7 @@ namespace CSharpDiscriminatedUnion.Generation
                         .Concat(getCasesFromFields())
                         .OrderByDescending(c => c.Item1)
                         .Select(c => c.Item2)
-                        .Select((c, i) => new StructDiscriminatedUnionCase(c.Name, c.CaseValues, i))
+                        .Select((c, i) => new StructDiscriminatedUnionCase(c.Name, c.CaseValues, i, c.Description))
                         .ToImmutableArray();
         }
 
@@ -335,9 +339,25 @@ namespace CSharpDiscriminatedUnion.Generation
             return casesPartialClass;
         }
 
-        public static void Debug(string value)
+        private string GetSummaryContent(CSharpSyntaxNode c)
         {
-            System.IO.File.AppendAllText(@"C:\test\classes.txt", value + Environment.NewLine);
+            var lines = c.GetLeadingTrivia()
+                         .Select(t => t.GetStructure())
+                         .OfType<DocumentationCommentTriviaSyntax>()
+                         .SelectMany(d => d.ChildNodes())
+                         .OfType<XmlElementSyntax>()
+                         .Where(x => x.StartTag.Name.ToString() == "summary")
+                         .SelectMany(n => n.ChildNodes().OfType<XmlTextSyntax>())
+                         .Select(n => n.TextTokens.Where(t => t.Kind() == SyntaxKind.XmlTextLiteralToken)
+                                                   .Select(t => t.ValueText.TrimStart())
+                                                   .Where(t => !string.IsNullOrEmpty(t))
+                                 )
+                         .FirstOrDefault();
+            if(lines == null)
+            {
+                return null;
+            }
+            return string.Join(Environment.NewLine, lines);
         }
     }
 }

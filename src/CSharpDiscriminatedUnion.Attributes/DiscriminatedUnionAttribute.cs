@@ -69,13 +69,18 @@ namespace CSharpDiscriminatedUnion.Attributes
         /// Specify that the case if the default value for the current type
         /// </summary>
         public bool IsDefaultValue { get; }
+        /// <summary>
+        /// A description of the case. The description is used in in the XML documentation of the generated code
+        /// </summary>
+        public string Description { get; }
 
         /// <summary>
         /// Creates a new instance of <see cref="StructCaseAttribute"/>
         /// </summary>
-        /// <param name="caseName"></param>
-        /// <param name="isDefaultValue"></param>
-        public StructCaseAttribute(string caseName, bool isDefaultValue = false)
+        /// <param name="caseName">The case name, which will be used to generate code</param>
+        /// <param name="isDefaultValue">Specify that the case if the default value for the current type</param>
+        /// <param name="description">A description of the case. The description is used in in the XML documentation of the generated code</param>
+        public StructCaseAttribute(string caseName, bool isDefaultValue = false, string description = null)
         {
             if (string.IsNullOrEmpty(caseName))
             {
@@ -83,6 +88,7 @@ namespace CSharpDiscriminatedUnion.Attributes
             }
             CaseName = caseName;
             IsDefaultValue = isDefaultValue;
+            Description = description;
         }
     }
 }
