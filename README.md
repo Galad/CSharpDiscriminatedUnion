@@ -72,7 +72,6 @@ Here are some examples of what you can do with the type `Maybe<T>`
 ## Installation
 [Installation]: #installation
 * Install the NuGet package CSharpDiscriminatedUnion
-* Install the NuGet package CodeGeneration.Roslyn.BuildTime (won't be necessary in the future)
 * Add the required dotnet CLI tool:
 ```xml
   <DotNetCliToolReference Include="dotnet-codegen" Version="0.4.88" />
