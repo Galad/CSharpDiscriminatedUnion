@@ -40,6 +40,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
     [TestFixture(typeof(MediaStruct_CollectionArray), typeof(MediaStruct_CollectionArray_EqualityFixture))]
     [TestFixture(typeof(MediaStruct_CollectionList), typeof(MediaStruct_CollectionList_EqualityFixture), Ignore = "Not supported")]
     [TestFixture(typeof(MediaStruct_CollectionImmutableArray), typeof(MediaStruct_CollectionImmutableArray_EqualityFixture))]
+    [TestFixture(typeof(SerializableUnion), typeof(SerializableEqualityFixture))]
     public class EqualityTests<T, TFixtureData>
         where TFixtureData : UnionEqualityFixture<T>, new()
         where T : IEquatable<T>

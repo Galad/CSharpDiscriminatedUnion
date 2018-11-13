@@ -119,7 +119,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
         {
             if (@case.CaseValues.Length == 0)
             {
-                return Argument(ParenthesizedLambdaExpression(GeneratorHelpers.FalseExpression()));
+                return Argument(ParenthesizedLambdaExpression(GeneratorHelpers.TrueExpression()));
             }
             var lambdaBody =
                 @case.CaseValues.Skip(1).Aggregate(
