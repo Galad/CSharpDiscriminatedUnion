@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Immutable;
-using Validation;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
@@ -32,11 +32,14 @@ namespace CSharpDiscriminatedUnion.Generation
             int caseNumber,
             string description = null)
         {
-            Requires.That(!caseValues.IsDefault, nameof(caseValues), "Cases cannot be a default value");
+            if (caseValues.IsDefault)
+            {
+                throw new ArgumentException("Cases cannot be a default value", nameof(caseValues));
+            }
             _readonlyContext = new ReadonlyContext()
             {
-                UserDefinedClass = Requires.NotNull(userDefinedClass, nameof(userDefinedClass)),
-                GeneratedPartialClass = Requires.NotNull(generatedPartialClass, nameof(generatedPartialClass)),
+                UserDefinedClass = userDefinedClass ?? throw new ArgumentNullException(nameof(userDefinedClass)),
+                GeneratedPartialClass = generatedPartialClass ?? throw new ArgumentNullException(nameof(generatedPartialClass)),
                 CaseValues = caseValues,
                 CaseNumber = caseNumber,
                 Description = description,
@@ -55,7 +58,11 @@ namespace CSharpDiscriminatedUnion.Generation
 
         public DiscriminatedUnionCase AddMember(MemberDeclarationSyntax member)
         {
-            Requires.NotNull(member, nameof(member));
+            if (member is null)
+            {
+                throw new ArgumentNullException(nameof(member));
+            }
+
             return new DiscriminatedUnionCase(
                 _readonlyContext,
                 Members.Add(member));

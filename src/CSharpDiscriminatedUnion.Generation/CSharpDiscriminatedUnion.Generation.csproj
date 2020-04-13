@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Sdk Name="CodeGeneration.Roslyn.Plugin.Sdk" Version="0.7.63" />
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\key.snk</AssemblyOriginatorKeyFile>    
     <IsTool>true</IsTool>
@@ -10,28 +11,11 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
   <ItemGroup>
     <Content Include="build\CSharpDiscriminatedUnion.targets">
       <Pack>true</Pack>
       <PackagePath>build\</PackagePath>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="CodeGeneration.Roslyn" Version="0.4.88" />
-    <PackageReference Include="CodeGeneration.Roslyn.Attributes" Version="0.4.88" />
-    <PackageReference Include="CodeGeneration.Roslyn.BuildTime" version="0.4.88" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="2.6.2">
-      <PrivateAssets>All</PrivateAssets>
-    </PackageReference>    
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Validation;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
@@ -16,8 +15,8 @@ namespace CSharpDiscriminatedUnion.Generation
         /// <param name="field"><see cref="Field"/></param>
         public CaseValue(FieldDeclarationSyntax field, ITypeSymbol symbolInfo, string description = null)
         {
-            Field = Requires.NotNull(field, nameof(field));
-            SymbolInfo = Requires.NotNull(symbolInfo, nameof(symbolInfo));
+            Field = field ?? throw new System.ArgumentNullException(nameof(field));
+            SymbolInfo = symbolInfo ?? throw new System.ArgumentNullException(nameof(symbolInfo));
             Description = description;
         }
     }

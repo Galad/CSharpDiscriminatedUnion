@@ -1,4 +1,5 @@
 ﻿using CodeGeneration.Roslyn;
+using CodeGeneration.Roslyn.Engine;
 using CSharpDiscriminatedUnion.Attributes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -9,36 +10,43 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CSharpDiscriminatedUnion.Generation.Tests
 {
     public abstract class CompilationTestsBase
     {
+#pragma warning disable S3963 // "static" fields should be initialized inline
         static CompilationTestsBase()
         {
             // this "core assemblies hack" is from https://stackoverflow.com/a/47196516/4418060
             var coreAssemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
-            var coreAssemblyNames = new[]
+            var coreAssemblyNames = new string[]
             {
-            "mscorlib.dll",
-            "System.dll",
-            "System.Core.dll",
-            "System.Runtime.dll"
-        };
+                "mscorlib.dll",
+                "System.dll",
+                "System.Core.dll",
+                "System.Runtime.dll"
+            };
             var coreMetaReferences =
                 coreAssemblyNames.Select(x => MetadataReference.CreateFromFile(Path.Combine(coreAssemblyPath, x)));
             var otherAssemblies = new[]
             {
-            typeof(CSharpCompilation).Assembly,
-            typeof(CodeGenerationAttributeAttribute).Assembly,
-            typeof(GenerateDiscriminatedUnionAttribute).Assembly,
-            typeof(TestAttribute).Assembly
-        };
+                typeof(object).Assembly,
+                typeof(Attribute).Assembly,
+                typeof(CSharpCompilation).Assembly,
+                typeof(CodeGenerationAttributeAttribute).Assembly,
+                typeof(GenerateDiscriminatedUnionAttribute).Assembly,
+                typeof(TestAttribute).Assembly
+            };
             MetadataReferences = coreMetaReferences
                 .Concat<MetadataReference>(otherAssemblies.Select(x => MetadataReference.CreateFromFile(x.Location)))
                 .ToImmutableArray();
         }
+#pragma warning restore S3963 // "static" fields should be initialized inline
+
+        protected CompilationTestsBase() { }
 
         internal const string CrLf = "\r\n";
         internal const string Lf = "\n";
@@ -49,7 +57,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
         internal static readonly string NormalizedPreamble = NormalizeToLf(DocumentTransform.GeneratedByAToolPreamble + Lf);
 
         internal static readonly ImmutableArray<MetadataReference> MetadataReferences;
-                
+
         protected static async Task AssertGeneratedAsExpected(string source, string expected)
         {
             var generatedTree = await Generate(source);
@@ -64,7 +72,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
         {
             return input?.Replace(CrLf, Lf);
         }
-        
+
         protected static async Task<SyntaxTree> Generate(string source)
         {
             var document = CreateProject(source).Documents.Single();
@@ -73,7 +81,7 @@ namespace CSharpDiscriminatedUnion.Generation.Tests
             var diagnostics = compilation.GetDiagnostics();
             Assert.IsEmpty(diagnostics.Where(x => x.Severity > DiagnosticSeverity.Warning));
             var progress = new Progress<Diagnostic>();
-            var result = await DocumentTransform.TransformAsync(compilation, tree, null, Assembly.Load, progress);
+            var result = await DocumentTransform.TransformAsync(compilation, tree, null, Assembly.Load, progress, CancellationToken.None);
             return result;
         }
 

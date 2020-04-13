@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace CSharpDiscriminatedUnion.Generation.Tests.UnionTypes
 {
+#pragma warning disable CS0282 // There is no defined ordering between fields in multiple declarations of partial struct
     [GenerateDiscriminatedUnion]
     public partial struct IOStruct<T>
     {
@@ -31,4 +32,5 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.UnionTypes
         [StructCase("Right")]
         readonly TRight valueRight;
     }
+#pragma warning restore CS0282 // There is no defined ordering between fields in multiple declarations of partial struct
 }

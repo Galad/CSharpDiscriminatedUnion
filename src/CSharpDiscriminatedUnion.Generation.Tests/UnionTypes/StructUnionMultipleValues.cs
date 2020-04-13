@@ -7,6 +7,7 @@ using CSharpDiscriminatedUnion.Attributes;
 
 namespace CSharpDiscriminatedUnion.Generation.Tests.UnionTypes
 {
+#pragma warning disable CS0282 // There is no defined ordering between fields in multiple declarations of partial struct
     [GenerateDiscriminatedUnion]
     public partial struct StructBook
     {
@@ -102,4 +103,5 @@ namespace CSharpDiscriminatedUnion.Generation.Tests.UnionTypes
         [StructCase("Rectangle", isDefaultValue: true)]
         readonly double width;
     }
+#pragma warning restore CS0282 // There is no defined ordering between fields in multiple declarations of partial struct
 }

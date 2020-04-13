@@ -1,14 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Validation;
 using CSharpDiscriminatedUnion.Generation.Generators;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
@@ -81,14 +76,17 @@ namespace CSharpDiscriminatedUnion.Generation
         {
             _readonlyContext = new ReadonlyContext()
             {
-                SymbolInfo = Requires.NotNull(symbolInfo, nameof(symbolInfo)),
-                SemanticModel = Requires.NotNull(semanticModel, nameof(semanticModel)),
-                UserDefinedClass = Requires.NotNull(userDefinedClass, nameof(userDefinedClass)),
-                Type = Requires.NotNull(applyToClassType, nameof(applyToClassType)),
+                SymbolInfo = symbolInfo ?? throw new ArgumentNullException(nameof(symbolInfo)),
+                SemanticModel = semanticModel ?? throw new ArgumentNullException(nameof(semanticModel)),
+                UserDefinedClass = userDefinedClass ?? throw new ArgumentNullException(nameof(userDefinedClass)),
+                Type = applyToClassType ?? throw new ArgumentNullException(nameof(applyToClassType)),
                 MatchGenericParameter = GeneratorHelpers.GenerateMatchResultGenericParameterName(userDefinedClass, symbolInfo.IsGenericType)
             };
-            Requires.That(!cases.IsDefault, nameof(cases), "Cases cannot be a default value");
-            GeneratedPartialClass = Requires.NotNull(generatedPartialClass, nameof(generatedPartialClass));
+            if (cases.IsDefault)
+            {
+                throw new ArgumentException("Cases cannot be a default value", nameof(cases));
+            }
+            GeneratedPartialClass = generatedPartialClass ?? throw new ArgumentNullException(nameof(generatedPartialClass));
             Members = ImmutableArray<MemberDeclarationSyntax>.Empty;
             Cases = cases;
         }
@@ -107,7 +105,11 @@ namespace CSharpDiscriminatedUnion.Generation
 
         public DiscriminatedUnionContext<T> AddMember(MemberDeclarationSyntax member)
         {
-            Requires.NotNull(member, nameof(member));
+            if (member is null)
+            {
+                throw new ArgumentNullException(nameof(member));
+            }
+
             return new DiscriminatedUnionContext<T>(
                 _readonlyContext,
                 GeneratedPartialClass,
@@ -118,7 +120,11 @@ namespace CSharpDiscriminatedUnion.Generation
 
         public DiscriminatedUnionContext<T> AddMembers(IEnumerable<MemberDeclarationSyntax> members)
         {
-            Requires.NotNull(members, nameof(members));
+            if (members is null)
+            {
+                throw new ArgumentNullException(nameof(members));
+            }
+
             return new DiscriminatedUnionContext<T>(
                 _readonlyContext,
                 GeneratedPartialClass,
@@ -129,7 +135,10 @@ namespace CSharpDiscriminatedUnion.Generation
 
         public DiscriminatedUnionContext<T> WithCases(ImmutableArray<T> cases)
         {
-            Requires.That(!cases.IsDefault, nameof(cases), "The parameter cannot be the default value");
+            if (cases.IsDefault)
+            {
+                throw new ArgumentException("The parameter cannot be the default value", nameof(cases));
+            }
             return new DiscriminatedUnionContext<T>(
                 _readonlyContext,
                 GeneratedPartialClass,
@@ -141,7 +150,7 @@ namespace CSharpDiscriminatedUnion.Generation
         {
             return new DiscriminatedUnionContext<T>(
                 _readonlyContext,
-                 Requires.NotNull(generatedPartialClass, nameof(generatedPartialClass)),
+                 generatedPartialClass ?? throw new ArgumentNullException(nameof(generatedPartialClass)),
                 Members,
                 Cases
                 );

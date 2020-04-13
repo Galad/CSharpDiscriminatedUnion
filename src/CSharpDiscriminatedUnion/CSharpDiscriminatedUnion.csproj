@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Sdk Name="CodeGeneration.Roslyn.PluginMetapackage.Sdk" Version="0.7.63" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.0;net45</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CSharpDiscriminatedUnion.Attributes\CSharpDiscriminatedUnion.Attributes.csproj" />
+    <NupkgAdditionalDependency Include="CSharpDiscriminatedUnion.Generation" IncludeAssets="all" />
+  </ItemGroup>
+</Project>

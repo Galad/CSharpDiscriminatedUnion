@@ -4,7 +4,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Validation;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace CSharpDiscriminatedUnion.Generation.Generators
@@ -25,8 +24,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
             Func<DiscriminatedUnionContext<T>, T, ExpressionSyntax> singletonInitializer,
             Func<DiscriminatedUnionContext<T>, T, ExpressionSyntax> generateFactoryMethodReturnStatement)
         {
-            Requires.NotNull(prefix, nameof(prefix));
-            _prefix = prefix;
+            _prefix = prefix ?? throw new ArgumentNullException(nameof(prefix));
             _preventNull = preventNull;
             _singletonInitializer = singletonInitializer;
             _generateFactoryMethodReturnStatement = generateFactoryMethodReturnStatement;

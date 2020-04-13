@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using Validation;
 
 namespace CSharpDiscriminatedUnion.Generation
 {
@@ -9,8 +8,7 @@ namespace CSharpDiscriminatedUnion.Generation
 
         public AggregateDiscriminatedUnionGenerator(params IDiscriminatedUnionGenerator<T>[] innerGenerators)
         {
-            Requires.NotNull(innerGenerators, nameof(innerGenerators));
-            _innerGenerators = innerGenerators;
+            _innerGenerators = innerGenerators ?? throw new System.ArgumentNullException(nameof(innerGenerators));
         }
 
         public DiscriminatedUnionContext<T> Build(DiscriminatedUnionContext<T> context)

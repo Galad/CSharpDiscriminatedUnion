@@ -9,7 +9,6 @@ using CSharpDiscriminatedUnion.Attributes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Validation;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace CSharpDiscriminatedUnion.Generation
@@ -21,7 +20,11 @@ namespace CSharpDiscriminatedUnion.Generation
 
         public CodeGenerator(AttributeData attributeData)
         {
-            Requires.NotNull(attributeData, nameof(attributeData));
+            if (attributeData is null)
+            {
+                throw new ArgumentNullException(nameof(attributeData));
+            }
+
             var arguments = attributeData.NamedArguments.ToImmutableDictionary(kvp => kvp.Key, k => k.Value.Value);
             T GetAttributeValue<T>(string name, T defaultValue, T nullValue)
             {
@@ -232,7 +235,7 @@ namespace CSharpDiscriminatedUnion.Generation
             var cases = casesClass.SelectMany(
                 c => c.ChildNodes()
                       .OfType<ClassDeclarationSyntax>()
-                      .Where(n => semanticModel.GetDeclaredSymbol(n).BaseType == applyToClassSymbolInfo))
+                      .Where(n => SymbolEqualityComparer.Default.Equals(semanticModel.GetDeclaredSymbol(n).BaseType, applyToClassSymbolInfo)))
                       .Select((c, i) => new DiscriminatedUnionCase(
                             c,
                             CreateEmptyCasePartialClass(c),
@@ -283,7 +286,7 @@ namespace CSharpDiscriminatedUnion.Generation
                               .Select(f =>
                               {
                                   var symbol = semanticModel.GetDeclaredSymbol(f.Declaration.Variables.Single()) as IFieldSymbol;
-                                  var attribute = symbol.GetAttributes().Where(a => a.AttributeClass == caseAttributeType).Single();
+                                  var attribute = symbol.GetAttributes().Where(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, caseAttributeType)).Single();
                                   var name = (string)attribute.ConstructorArguments[0].Value;
                                   var isDefault = (bool)attribute.ConstructorArguments[1].Value;
                                   var description = (string)attribute.ConstructorArguments[2].Value;

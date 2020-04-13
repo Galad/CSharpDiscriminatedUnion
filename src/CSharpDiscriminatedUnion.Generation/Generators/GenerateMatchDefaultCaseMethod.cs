@@ -51,6 +51,11 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
         {
             var matchName = "match" + @case.Name;
             return ParenthesizedLambdaExpression(
+                        ParameterList(
+                            SeparatedList(
+                                @case.CaseValues.Select(cv => Parameter(cv.Name))
+                            )
+                        ),
                         ConditionalExpression(
                             BinaryExpression(
                                 SyntaxKind.EqualsExpression,
@@ -71,13 +76,6 @@ namespace CSharpDiscriminatedUnion.Generation.Generators
                                         @case.CaseValues.Select(cv => Argument(IdentifierName(cv.Name)))
                                     )
                                 )
-                            )
-                        )
-                    )
-                    .WithParameterList(
-                        ParameterList(
-                            SeparatedList(
-                                @case.CaseValues.Select(cv => Parameter(cv.Name))
                             )
                         )
                     );

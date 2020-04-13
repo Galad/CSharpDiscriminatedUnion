@@ -104,14 +104,13 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
                 return Argument(SimpleLambdaExpression(Parameter(@case.CaseValues[0].Name), lambdaBody));
             }
             return Argument(
-                ParenthesizedLambdaExpression(lambdaBody)
-                .WithParameterList(
+                ParenthesizedLambdaExpression(
                     ParameterList(
                         SeparatedList(
                             @case.CaseValues.Select(c => Parameter(c.Name))
                         )
-                    )
-                )
+                    ),
+                    lambdaBody)
             );
         }
 
@@ -119,7 +118,7 @@ namespace CSharpDiscriminatedUnion.Generation.Generators.Class
         {
             if (@case.CaseValues.Length == 0)
             {
-                return Argument(ParenthesizedLambdaExpression(GeneratorHelpers.TrueExpression()));
+                return Argument(ParenthesizedLambdaExpression(ParameterList(), GeneratorHelpers.TrueExpression()));
             }
             var lambdaBody =
                 @case.CaseValues.Skip(1).Aggregate(
