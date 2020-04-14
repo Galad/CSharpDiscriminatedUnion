@@ -2,7 +2,7 @@
 
   <PropertyGroup>    
     <PackageOutputPath>$(MSBuildThisFileDirectory)..\bin\Packages\$(Configuration)\</PackageOutputPath>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/Galad/CSharpDiscriminatedUnion/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Galad/CSharpDiscriminatedUnion</PackageProjectUrl>
     <Copyright>Copyright 2017</Copyright>
     <PackageTags>Discriminated union, tagged union, sum type, algebraic data type, functional, F#</PackageTags>
