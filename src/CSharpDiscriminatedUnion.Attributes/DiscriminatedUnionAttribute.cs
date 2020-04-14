@@ -28,7 +28,7 @@ namespace CSharpDiscriminatedUnion.Attributes
     /// ]]>
     /// </example>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = true)]
-    [CodeGenerationAttribute("CSharpDiscriminatedUnion.Generation.CodeGenerator, CSharpDiscriminatedUnion.Generation, Version=" + ThisAssembly.AssemblyVersion + ", Culture=neutral, PublicKeyToken=" + ThisAssembly.PublicKeyToken)]
+    [CodeGenerationAttribute("CSharpDiscriminatedUnion.Generator.CodeGenerator, CSharpDiscriminatedUnion.Generator, Version=" + ThisAssembly.AssemblyVersion + ", Culture=neutral, PublicKeyToken=" + ThisAssembly.PublicKeyToken)]
     [Conditional("CodeGeneration")]
     public class GenerateDiscriminatedUnionAttribute : Attribute
     {
