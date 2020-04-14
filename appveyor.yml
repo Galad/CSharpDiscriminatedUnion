@@ -1,5 +1,8 @@
 version: '{build}'
-image: Visual Studio 2017
+branches:
+  only:
+  - master
+image: Visual Studio 2019
 configuration: Release
 before_build:
 - |- # Restore TWICE. See https://github.com/AArnott/Nerdbank.GitVersioning/issues/113#issuecomment-285903085

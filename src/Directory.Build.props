@@ -2,7 +2,7 @@
 
   <PropertyGroup>    
     <PackageOutputPath>$(MSBuildThisFileDirectory)..\bin\Packages\$(Configuration)\</PackageOutputPath>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/Galad/CSharpDiscriminatedUnion/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Galad/CSharpDiscriminatedUnion</PackageProjectUrl>
     <Copyright>Copyright 2017</Copyright>
     <PackageTags>Discriminated union, tagged union, sum type, algebraic data type, functional, F#</PackageTags>
@@ -10,12 +10,12 @@
     <Company />    
     <RepositoryUrl>https://github.com/Galad/CSharpDiscriminatedUnion</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <!-- https://github.com/NuGet/Home/issues/4337 -->
   <ItemGroup>
-    <PackageReference Include="Nerdbank.GitVersioning" Version="2.2.13" PrivateAssets="all" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.1.74" PrivateAssets="all" />
   </ItemGroup>
 
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' == 'true' ">
